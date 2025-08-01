@@ -223,7 +223,14 @@ export const lockPaymentType = async (registrationNumber: string, paymentType: s
 };
 
 
-export const fetchEliteCard = async (registrationNumber: string) => {
-  const res = await fetch(`${API_URL}/students/elite-card/${registrationNumber}`);
-  return res.json();
+
+export const fetchEliteCard = async (registration_number: string) => {
+  try {
+    const response = await fetch(`${API_URL}/students/elite-card/${registration_number}`);
+    const data = await response.json();
+    return data; // { success: true/false, data: { card_type, card_number } }
+  } catch (error) {
+    console.error("❌ API fetchEliteCard error:", error);
+    throw error;
+  }
 };

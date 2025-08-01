@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { getStudentDetails } from '../../services/api';
+import { getStudentDetails, fetchEliteCard } from '../../services/api';
 import { StudentDetails } from '../../types/auth';
 import { Menu, X } from 'lucide-react';
 
@@ -13,19 +13,23 @@ const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [eliteCard, setEliteCard] = useState(null);
 
+
+
   useEffect(() => {
-    if (studentDetails?.registration_number) {
-      fetch(`http://localhost:3006/api/students/elite-card/${studentDetails.registration_number}`)
-        .then((res) => res.json())
-        .then((data) => {
+    const getEliteCard = async () => {
+      if (studentDetails?.registration_number) {
+        try {
+          const data = await fetchEliteCard(studentDetails.registration_number);
           if (data.success) {
             setEliteCard(data.data);
           }
-        })
-        .catch((err) => {
+        } catch (err) {
           console.error("Elite Card Fetch Error:", err);
-        });
-    }
+        }
+      }
+    };
+
+    getEliteCard();
   }, [studentDetails]);
 
   useEffect(() => {

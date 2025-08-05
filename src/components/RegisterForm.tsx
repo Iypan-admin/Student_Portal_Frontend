@@ -148,18 +148,18 @@ const RegisterForm = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 via-white to-blue-50"
-         style={{ 
-           backgroundImage: 'url("/src/assets/images/solid-blue-background.jpg")',
-           backgroundSize: 'cover',
-           backgroundPosition: 'center',
-           backgroundAttachment: 'fixed' // This makes the background image fixed
-         }}>
+      style={{
+        backgroundImage: 'url("/src/assets/images/solid-blue-background.jpg")',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundAttachment: 'fixed' // This makes the background image fixed
+      }}>
       {/* Fixed Header */}
       <div className="fixed top-0 left-0 right-0 bg-white shadow-sm py-2 z-50">
         <div className="max-w-7xl mx-auto px-4 flex justify-between items-center">
-          <img 
-            src="/src/assets/images/logo.png" 
-            alt="ISML Logo" 
+          <img
+            src="/logo.png"
+            alt="ISML Logo"
             className="h-12 md:h-16"
           />
           <button
@@ -194,9 +194,8 @@ const RegisterForm = () => {
                     name="name"
                     type="text"
                     required
-                    className={`appearance-none block w-full px-4 py-3 border ${
-                      errors.name ? 'border-red-300' : 'border-gray-300'
-                    } rounded-md shadow-sm placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 sm:text-sm`}
+                    className={`appearance-none block w-full px-4 py-3 border ${errors.name ? 'border-red-300' : 'border-gray-300'
+                      } rounded-md shadow-sm placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 sm:text-sm`}
                     placeholder="Enter your full name"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -206,7 +205,7 @@ const RegisterForm = () => {
 
                 <div>
                   <label htmlFor="state" className="block text-sm font-medium text-gray-700 mb-1">
-                    State
+                    Mode
                   </label>
                   <select
                     id="state"
@@ -216,7 +215,7 @@ const RegisterForm = () => {
                     value={formData.state}
                     onChange={handleStateChange}
                   >
-                    <option value="">Select State</option>
+                    <option value="">Select Mode</option>
                     {states.map((state) => (
                       <option key={state.state_id} value={state.state_id}>
                         {state.state_name}
@@ -256,9 +255,8 @@ const RegisterForm = () => {
                     name="email"
                     type="email"
                     required
-                    className={`appearance-none block w-full px-4 py-3 border ${
-                      errors.email ? 'border-red-300' : 'border-gray-300'
-                    } rounded-md shadow-sm placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 sm:text-sm`}
+                    className={`appearance-none block w-full px-4 py-3 border ${errors.email ? 'border-red-300' : 'border-gray-300'
+                      } rounded-md shadow-sm placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 sm:text-sm`}
                     placeholder="Enter your email"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
@@ -275,9 +273,8 @@ const RegisterForm = () => {
                     name="password"
                     type="password"
                     required
-                    className={`appearance-none block w-full px-4 py-3 border ${
-                      errors.password ? 'border-red-300' : 'border-gray-300'
-                    } rounded-md shadow-sm placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 sm:text-sm`}
+                    className={`appearance-none block w-full px-4 py-3 border ${errors.password ? 'border-red-300' : 'border-gray-300'
+                      } rounded-md shadow-sm placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 sm:text-sm`}
                     placeholder="Enter your password"
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
@@ -294,9 +291,8 @@ const RegisterForm = () => {
                     name="confirmPassword"
                     type="password"
                     required
-                    className={`appearance-none block w-full px-4 py-3 border ${
-                      errors.confirmPassword ? 'border-red-300' : 'border-gray-300'
-                    } rounded-md shadow-sm placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 sm:text-sm`}
+                    className={`appearance-none block w-full px-4 py-3 border ${errors.confirmPassword ? 'border-red-300' : 'border-gray-300'
+                      } rounded-md shadow-sm placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 sm:text-sm`}
                     placeholder="Confirm your password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
@@ -313,9 +309,8 @@ const RegisterForm = () => {
                     name="phone"
                     type="tel"
                     required
-                    className={`appearance-none block w-full px-4 py-3 border ${
-                      errors.phone ? 'border-red-300' : 'border-gray-300'
-                    } rounded-md shadow-sm placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 sm:text-sm`}
+                    className={`appearance-none block w-full px-4 py-3 border ${errors.phone ? 'border-red-300' : 'border-gray-300'
+                      } rounded-md shadow-sm placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 sm:text-sm`}
                     placeholder="Enter your phone number"
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
@@ -352,7 +347,7 @@ const RegisterForm = () => {
               <option value="">Select Batch</option>
               {batches.map((batch) => (
                 <option key={batch.batch_id} value={batch.batch_id}>
-                  {batch.batch_name} 
+                  {batch.batch_name}
                   {batch.courses ? ` (${batch.courses.language}, ${batch.courses.type}, ${batch.duration})` : ''}
                 </option>
               ))}

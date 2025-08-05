@@ -538,6 +538,17 @@ const Payments = () => {
                                     className="border border-gray-300 rounded px-2 py-1 w-full bg-gray-100 cursor-not-allowed"
                                   />
                                 </div>
+                                <div className="mb-3">
+                                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Discount Percentage
+                                  </label>
+                                  <input
+                                    type="text"
+                                    readOnly
+                                    value={`${result.discount_percentage}%`}
+                                    className="block w-full px-3 py-2 border border-gray-200 rounded-md shadow-sm sm:text-sm"
+                                  />
+                                </div>
 
                                 {/* Monthly EMI Buttons */}
                                 <div className="space-y-2">

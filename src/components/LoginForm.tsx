@@ -4,6 +4,7 @@ import { toast } from 'react-hot-toast';
 import { LogIn, Key } from 'lucide-react';
 import { login, forgotPassword, resetPassword } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { Eye, EyeOff, User } from 'lucide-react';
 
 const LoginForm = () => {
   const navigate = useNavigate();
@@ -16,6 +17,7 @@ const LoginForm = () => {
   const [showResetPassword, setShowResetPassword] = useState(false);
   const [resetToken, setResetToken] = useState('');
   const [newPassword, setNewPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -195,7 +197,8 @@ const LoginForm = () => {
 
             <form className="space-y-6" onSubmit={handleSubmit}>
               <div className="space-y-4">
-                <div>
+                {/* Registration Number Field with icon on right */}
+                <div className="relative mb-4">
                   <label htmlFor="registration_number" className="block text-sm font-medium text-gray-700 mb-1">
                     Registration Number
                   </label>
@@ -204,27 +207,39 @@ const LoginForm = () => {
                     name="registration_number"
                     type="text"
                     required
-                    className="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                    className="appearance-none block w-full px-4 py-3 pr-10 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                     placeholder="Enter your registration number"
                     value={formData.registration_number}
                     onChange={(e) => setFormData({ ...formData, registration_number: e.target.value })}
                   />
+                  {/* User icon on right */}
+                  <User className="absolute right-3 top-[38px] text-gray-400" size={18} />
                 </div>
 
-                <div>
+
+                {/* Password Field with show/hide toggle */}
+                <div className="relative">
                   <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
                     Password
                   </label>
                   <input
                     id="password"
                     name="password"
-                    type="password"
+                    type={showPassword ? 'text' : 'password'}
                     required
-                    className="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                    className="appearance-none block w-full px-4 py-3 pr-10 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                     placeholder="Enter your password"
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   />
+                  {/* Toggle icon */}
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-[38px] text-gray-500"
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
                 </div>
               </div>
 

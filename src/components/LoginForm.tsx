@@ -163,18 +163,18 @@ const LoginForm = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 via-white to-blue-50" 
-         style={{ 
-           backgroundImage: 'url("/solid-blue-background.jpg")',
-           backgroundSize: 'cover',
-           backgroundPosition: 'center'
-         }}>
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 via-white to-blue-50"
+      style={{
+        backgroundImage: 'url("/solid-blue-background.jpg")',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center'
+      }}>
       {/* Header */}
       <div className="w-full bg-white shadow-sm py-2">
         <div className="max-w-7xl mx-auto px-4">
-          <img 
-            src="/logo.png" 
-            alt="ISML Logo" 
+          <img
+            src="/logo.png"
+            alt="ISML Logo"
             className="h-12 md:h-16"
           />
         </div>
@@ -255,7 +255,7 @@ const LoginForm = () => {
           </div>
 
           {/* Trust Indicators */}
-          
+
         </div>
       </div>
 
@@ -264,6 +264,9 @@ const LoginForm = () => {
         <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
           <p className="text-center text-sm text-gray-500">
             © {new Date().getFullYear()} Indian School for Modern Languages. All rights reserved.
+          </p>
+          <p className="text-center text-sm text-gray-500">
+            Version 1.0
           </p>
         </div>
       </footer>

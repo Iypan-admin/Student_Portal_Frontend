@@ -32,6 +32,8 @@ const RegisterForm = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isCenterDisabled, setIsCenterDisabled] = useState(false);
+
 
   useEffect(() => {
     const fetchStates = async () => {
@@ -47,12 +49,27 @@ const RegisterForm = () => {
 
   const handleStateChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedStateId = e.target.value;
+
+    // Clear existing center and disable flag
     setFormData({ ...formData, state: selectedStateId, center: '' });
+    setIsCenterDisabled(false); // reset to false initially
 
     if (selectedStateId) {
       try {
         const data = await getCenters(selectedStateId);
         setCenters(data);
+
+        const selectedState = states.find((s) => s.state_id === selectedStateId);
+        const isOnlineMode = selectedState?.state_name.toLowerCase() === 'online';
+
+        // If mode is Online and only one center is available → auto-select and disable
+        if (isOnlineMode && data.length === 1) {
+          setFormData((prev) => ({
+            ...prev,
+            center: data[0].center_id,
+          }));
+          setIsCenterDisabled(true); // 💥 make center dropdown disabled
+        }
       } catch (error) {
         console.error('Error fetching centers:', error);
       }
@@ -60,6 +77,8 @@ const RegisterForm = () => {
       setCenters([]);
     }
   };
+
+
 
   const fetchBatches = async (centerId: string) => {
     try {
@@ -235,7 +254,7 @@ const RegisterForm = () => {
                     id="center"
                     name="center"
                     required
-                    disabled={!formData.state}
+                    disabled={!formData.state || isCenterDisabled} // ✅ updated here
                     className="block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm text-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 sm:text-sm"
                     value={formData.center}
                     onChange={(e) => setFormData({ ...formData, center: e.target.value })}

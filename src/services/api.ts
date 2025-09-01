@@ -16,8 +16,8 @@ import {
   TransactionsResponse,
 } from '../types/auth';
 
-// const API_URL = 'https://student.iypan.com/api';
-const API_URL = "http://localhost:3006/api";
+const API_URL = 'https://student.iypan.com/api';
+// const API_URL = "http://localhost:3006/api";
 
 
 export const register = async (data: RegisterData): Promise<AuthResponse> => {

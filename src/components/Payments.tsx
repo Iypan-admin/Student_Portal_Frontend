@@ -1,4 +1,18 @@
 import React, { useEffect, useState } from 'react';
+// Load Razorpay JS dynamically
+const loadRazorpayScript = (): Promise<boolean> => {
+  return new Promise((resolve) => {
+    if (document.getElementById("razorpay-script")) return resolve(true);
+
+    const script = document.createElement("script");
+    script.id = "razorpay-script";
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+};
+
 import { useNavigate } from 'react-router-dom';
 import { LogOut, CreditCard, Clock, Check, AlertCircle, Receipt } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -7,11 +21,12 @@ import {
   fetchPaymentLockStatus,
   lockPaymentType,
   fetchEliteCard,
+  createRazorpayOrder,
+  verifyPayment,
 } from '../services/api';
 import { Enrollment, PaymentRequest, PaymentTransaction } from '../types/auth';
 import Sidebar from './parts/Sidebar';
 import toast from 'react-hot-toast';
-
 
 const Payments = () => {
   const navigate = useNavigate();
@@ -39,14 +54,33 @@ const Payments = () => {
   const [totalFees, setTotalFees] = useState(0);
   const [discountPercentage, setDiscountPercentage] = useState(0);
   const [finalFees, setFinalFees] = useState(0);
-  const [isLocked, setIsLocked] = useState(false); // To track if selection is locked
+  const [isLocked, setIsLocked] = useState(false);
   const [statusApproved, setStatusApproved] = useState(false);
   const [emiPaidCount, setEmiPaidCount] = useState(0);
 
+  // ✅ Payment Success Handler (used by Razorpay + Manual)
+  const handlePaymentSuccess = async (orderId, response) => {
+    try {
+      const verifyRes = await verifyPayment({
+        razorpay_order_id: orderId,
+        razorpay_payment_id: response.razorpay_payment_id,
+        razorpay_signature: response.razorpay_signature,
+      });
 
+      if (verifyRes.success) {
+        setTransactionId(response.razorpay_payment_id); // 🔹 Auto-fill manual form
+        toast.success("✅ Payment verified successfully!");
+        fetchTransactions();
+      } else {
+        toast.error("⚠️ Payment verification failed");
+      }
+    } catch (err) {
+      console.error("Payment verification failed:", err);
+      toast.error("Payment verification failed");
+    }
+  };
 
-
-  // Auto-fetch fees when component mounts
+  // Fetch Fees on Mount
   useEffect(() => {
     const studentDetailsString = localStorage.getItem('studentDetails');
 
@@ -57,7 +91,7 @@ const Payments = () => {
 
         if (regNum) {
           setRegistrationNumber(regNum);
-          getCourseFeesFromAPI(regNum); // 👈 Updated call
+          getCourseFeesFromAPI(regNum);
         } else {
           setError('Registration number not found in studentDetails');
         }
@@ -69,11 +103,9 @@ const Payments = () => {
     }
   }, []);
 
-
-  // Fetch fees from backend API
   const getCourseFeesFromAPI = async (regNum: string) => {
     try {
-      const res = await fetchCourseFees(regNum); // imported from api.ts
+      const res = await fetchCourseFees(regNum);
 
       setResult(res);
 
@@ -97,7 +129,7 @@ const Payments = () => {
     }
   };
 
-
+  // Payment Lock Check
   useEffect(() => {
     const fetchLockStatus = async () => {
       if (!result?.registration_number) return;
@@ -106,24 +138,23 @@ const Payments = () => {
         const json = await fetchPaymentLockStatus(result.registration_number);
         if (json.success && json.data?.payment_type) {
           setPaymentType(json.data.payment_type);
-          setIsLocked(true); // Lock the payment UI
+          setIsLocked(true);
         } else {
-          setIsLocked(false); // Not locked yet
+          setIsLocked(false);
         }
       } catch (err) {
-        console.log("Payment lock check failed or not locked yet.");
-        setIsLocked(false); // Optional: unlock if error
+        console.log("Payment lock check failed.");
+        setIsLocked(false);
       }
     };
 
     fetchLockStatus();
   }, [result]);
 
-
   const handleLockPayment = async () => {
     if (registrationNumber) {
       try {
-        await lockPaymentType(registrationNumber, paymentType); // Use the imported function
+        await lockPaymentType(registrationNumber, paymentType);
         console.log("Payment type locked successfully.");
       } catch (error) {
         console.error("Failed to lock payment type:", error);
@@ -131,8 +162,74 @@ const Payments = () => {
     }
   };
 
+  // 🔹 Main Payment Function
+  const handlePayment = async (amount: number, currentEmi: number = 0) => {
+    try {
+      const res = await loadRazorpayScript();
+      if (!res) {
+        toast.error("❌ Failed to load Razorpay SDK.");
+        return;
+      }
 
+      const data = await createRazorpayOrder({
+        amount,
+        registration_number: studentDetails?.registration_number || "NA",
+        student_name: studentDetails?.name || "Unknown",
+        email: studentDetails?.email || "student@example.com",
+        contact: studentDetails?.phone || "9999999999",
+        enrollment_id: selectedEnrollmentId,
+        course_name: result?.course_name || "Unknown Course",
+        course_duration: result?.duration || 0,
+        original_fees: result?.total_fees || 0,
+        discount_percentage: result?.discount_percentage || 0,
+        final_fees: paymentType === 'emi' ? amount : finalFees,
+        payment_type: paymentType || "full",
+        emi_duration: paymentType === "emi" ? (emiMonths || 0) : null,
+        current_emi: paymentType === "emi" ? currentEmi : null,
+      });
 
+      if (!data?.success || !data.order || !data.key) {
+        toast.error("❌ Order creation failed.");
+        return;
+      }
+
+      const options = {
+        key: data.key,
+        amount: data.order.amount,
+        currency: data.order.currency,
+        name: "ISML",
+        description: "Course Fee Payment",
+        order_id: data.order.id,
+        prefill: {
+          name: studentDetails?.name || "Student",
+          email: studentDetails?.email || "student@example.com",
+          contact: studentDetails?.phone || "9999999999",
+        },
+        handler: async (response: any) => {
+          // ✅ Use centralized success handler
+          await handlePaymentSuccess(data.order.id, response);
+        },
+        modal: {
+          ondismiss: () => toast.info("ℹ️ Payment popup closed without completing."),
+          escape: true,
+        },
+        theme: { color: "#3399cc" },
+      };
+
+      const rzp = new (window as any).Razorpay(options);
+      rzp.open();
+
+      rzp.on("payment.failed", (response: any) => {
+        console.error("Payment Failed:", response.error);
+        toast.error("❌ Payment failed. Please try again.");
+      });
+    } catch (err) {
+      console.error("Razorpay error:", err);
+      toast.error("❌ Something went wrong while initiating payment.");
+    }
+  };
+
+  // Enrollments Fetch
   useEffect(() => {
     const fetchEnrollments = async () => {
       if (token) {
@@ -154,6 +251,8 @@ const Payments = () => {
 
     fetchEnrollments();
   }, [token]);
+
+  // Elite Card
   useEffect(() => {
     const getEliteCard = async () => {
       if (studentDetails?.registration_number) {
@@ -171,28 +270,22 @@ const Payments = () => {
     getEliteCard();
   }, [studentDetails]);
 
-
-
+  // Transactions Fetch
   const fetchTransactions = async () => {
     if (token) {
       try {
         setLoading(true);
         const response = await getTransactions(token);
-        setTransactions(response.transactions);
-
         const txns = response.transactions;
         setTransactions(txns);
 
-        // ✅ Mark as paid if ANY transaction is approved, regardless of duration
         const isAnyPaymentDone = txns.some((txn) => txn.status === true);
         setStatusApproved(isAnyPaymentDone);
 
-        // ✅ Count EMI payments only (duration > 0 && status === true)
         const emiPaid = txns.filter(
           (txn) => txn.status === true && txn.duration > 0
         );
         setEmiPaidCount(emiPaid.length);
-
       } catch (error) {
         console.error('Failed to fetch transactions:', error);
         toast.error('Failed to load transactions.');
@@ -202,16 +295,11 @@ const Payments = () => {
     }
   };
 
-
-
-
-
-
-
   useEffect(() => {
     fetchTransactions();
   }, [token]);
 
+  // Manual Submit
   const handleSubmitPayment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedEnrollmentId || !transactionId || !duration) {
@@ -232,7 +320,7 @@ const Payments = () => {
       fetchTransactions();
     } catch (error) {
       console.error('Failed to submit payment:', error);
-      toast.error('Payment submission failed. Please try again.');
+      toast.error('Payment submission failed.');
     } finally {
       setSubmitting(false);
     }
@@ -243,7 +331,6 @@ const Payments = () => {
     navigate('/login');
   };
 
-  // Function to format date
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -251,7 +338,6 @@ const Payments = () => {
       day: 'numeric',
     });
   };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white transition-all duration-300 ease-in-out lg:ml-72">
       <Sidebar />
@@ -505,18 +591,11 @@ const Payments = () => {
                                         px-4 py-2 text-sm rounded border text-white border-transparent transition duration-200 
                                         ${statusApproved ? 'bg-green-400 cursor-not-allowed' : 'bg-red-600 hover:bg-green-700'}
                                            `}
-                                      onClick={() => setStep(2)}
+                                      onClick={() => handlePayment(finalFees)}
                                       disabled={statusApproved}
                                     >
                                       {statusApproved ? 'Paid' : 'Pay'}
                                     </button>
-
-
-
-
-
-
-
                                   </div>
                                 </div>
                               </div>
@@ -562,7 +641,8 @@ const Payments = () => {
                                       .map((txn) => txn.duration);
 
                                     const isPaid = paidDurations.includes(month);
-                                    const lastPaid = paidDurations.length > 0 ? Math.max(...paidDurations) : 0;
+                                    const lastPaid =
+                                      paidDurations.length > 0 ? Math.max(...paidDurations) : 0;
 
                                     // ✅ Only allow the next unpaid EMI month to be paid
                                     const isNextPayMonth = month === lastPaid + 1;
@@ -581,32 +661,29 @@ const Payments = () => {
 
                                         <button
                                           className={`px-4 py-1 text-sm font-medium rounded transition duration-200 
-          ${isPaid
-                                              ? 'bg-green-400 text-white cursor-not-allowed'
+    ${isPaid
+                                              ? "bg-green-400 text-white cursor-not-allowed"
                                               : isNextPayMonth
-                                                ? 'bg-red-600 hover:bg-green-700 text-white'
-                                                : 'bg-yellow-300 text-gray-800 cursor-not-allowed'
+                                                ? "bg-red-600 hover:bg-green-700 text-white"
+                                                : "bg-yellow-300 text-gray-800 cursor-not-allowed"
                                             }`}
                                           onClick={() => {
-                                            if (isNextPayMonth && !isPaid) setStep(2);
+                                            if (isNextPayMonth && !isPaid) {
+                                              handlePayment(monthlyAmount, month); // Pass the monthly EMI amount & current EMI month
+                                            }
                                           }}
                                           disabled={isDisabled}
                                         >
-                                          {isPaid
-                                            ? 'Paid'
-                                            : isNextPayMonth
-                                              ? 'Pay Now'
-                                              : 'Upcoming'}
+                                          {isPaid ? "Paid" : isNextPayMonth ? "Pay Now" : "Upcoming"}
                                         </button>
+
                                       </div>
                                     );
                                   })}
-
-
-
                                 </div>
                               </div>
                             )}
+
 
 
 
@@ -648,13 +725,16 @@ const Payments = () => {
                             ← Back
                           </button>
                         </div>
-                        <iframe
-                          src="https://pages.razorpay.com/learnwithisml"
-                          className="w-full h-full border-0 rounded-lg"
-                          title="Razorpay Payment Form"
-                          allowFullScreen
-                        />
+
+                        <button
+                          onClick={() => handlePayment(finalFees)}  // currentEmi auto=0
+
+                          className="px-6 py-3 text-lg bg-green-600 text-white rounded-lg hover:bg-green-700 shadow"
+                        >
+                          Pay : ₹ {finalFees}
+                        </button>
                       </div>
+
                     )}
 
 
@@ -699,13 +779,15 @@ const Payments = () => {
                         </label>
                         <input
                           type="text"
-                          value={transactionId}
-                          onChange={(e) => setTransactionId(e.target.value)}
+                          value={transactionId}   // ✅ auto-fill from payment success
+                          readOnly               // 🔹 Prevent manual editing
                           className="block w-full px-3 py-2 border border-gray-200 rounded-md 
-                            shadow-sm focus:ring-blue-600 focus:border-blue-600 sm:text-sm"
-                          placeholder="Enter transaction ID from your payment"
-                          required
+      shadow-sm focus:ring-blue-600 focus:border-blue-600 sm:text-sm"
+                          placeholder="Auto filled after payment"
                         />
+
+
+
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">

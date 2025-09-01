@@ -16,7 +16,9 @@ import {
   TransactionsResponse,
 } from '../types/auth';
 
-const API_URL = 'https://student.iypan.com/api';
+// const API_URL = 'https://student.iypan.com/api';
+const API_URL = "http://localhost:3006/api";
+
 
 export const register = async (data: RegisterData): Promise<AuthResponse> => {
   const response = await axios.post(`${API_URL}/students/register`, data);
@@ -222,8 +224,6 @@ export const lockPaymentType = async (registrationNumber: string, paymentType: s
   }
 };
 
-
-
 export const fetchEliteCard = async (registration_number: string) => {
   try {
     const response = await fetch(`${API_URL}/students/elite-card/${registration_number}`);
@@ -232,5 +232,45 @@ export const fetchEliteCard = async (registration_number: string) => {
   } catch (error) {
     console.error("❌ API fetchEliteCard error:", error);
     throw error;
+  }
+};
+
+import axios from "axios";
+
+const API = axios.create({
+  baseURL: API_URL,
+  headers: { "Content-Type": "application/json" },
+});
+
+// ✅ Create Razorpay Order (accept full payload, not just amount)
+export const createRazorpayOrder = async (payload: any) => {
+  try {
+    const { data } = await API.post("/razorpay/create-order", payload);
+    return data; // { success, order, key }
+  } catch (error: any) {
+    console.error("❌ API createRazorpayOrder error:", error.response?.data || error.message);
+    return { success: false, message: "Failed to create order" };
+  }
+};
+
+// ✅ Verify Payment (frontend confirmation – optional, webhook is primary)
+export const verifyPayment = async (paymentData: any) => {
+  try {
+    const { data } = await API.post("/razorpay/verify", paymentData);
+    return data;
+  } catch (error: any) {
+    console.error("❌ Verify Payment Error:", error.response?.data || error.message);
+    return { success: false, message: "Verification failed" };
+  }
+};
+
+// ✅ Get Payment Status from DB
+export const getPaymentStatus = async (paymentId: string) => {
+  try {
+    const { data } = await API.get(`/razorpay/status/${paymentId}`);
+    return data;
+  } catch (error: any) {
+    console.error("❌ Get Payment Status Error:", error.response?.data || error.message);
+    return { success: false, message: "Could not fetch status" };
   }
 };

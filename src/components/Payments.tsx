@@ -300,31 +300,31 @@ const Payments = () => {
   }, [token]);
 
   // Manual Submit
-  const handleSubmitPayment = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedEnrollmentId || !transactionId || !duration) {
-      toast.error('Please fill all fields.');
-      return;
-    }
+  // const handleSubmitPayment = async (e: React.FormEvent) => {
+  //   e.preventDefault();
+  //   if (!selectedEnrollmentId || !transactionId || !duration) {
+  //     toast.error('Please fill all fields.');
+  //     return;
+  //   }
 
-    setSubmitting(true);
-    try {
-      const paymentData: PaymentRequest = {
-        enrollment_id: selectedEnrollmentId,
-        transaction_id: transactionId,
-        duration,
-      };
-      const response = await postPayment(paymentData, token!);
-      toast.success(response.message);
-      setTransactionId('');
-      fetchTransactions();
-    } catch (error) {
-      console.error('Failed to submit payment:', error);
-      toast.error('Payment submission failed.');
-    } finally {
-      setSubmitting(false);
-    }
-  };
+  //   setSubmitting(true);
+  //   try {
+  //     const paymentData: PaymentRequest = {
+  //       enrollment_id: selectedEnrollmentId,
+  //       transaction_id: transactionId,
+  //       duration,
+  //     };
+  //     const response = await postPayment(paymentData, token!);
+  //     toast.success(response.message);
+  //     setTransactionId('');
+  //     fetchTransactions();
+  //   } catch (error) {
+  //     console.error('Failed to submit payment:', error);
+  //     toast.error('Payment submission failed.');
+  //   } finally {
+  //     setSubmitting(false);
+  //   }
+  // };
 
   const handleLogout = () => {
     setToken(null);
@@ -446,7 +446,7 @@ const Payments = () => {
           <div className="w-full">
             {/* Payment Options Page */}
             {activeTab === 'current' && (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 gap-6">
                 {/* Left Column - Quick Online Payment */}
                 <div className="bg-white rounded-xl shadow-md overflow-hidden h-full">
                   <div className="px-5 py-3 bg-gradient-to-r from-blue-600 to-blue-700">
@@ -456,7 +456,7 @@ const Payments = () => {
                   </div>
 
 
-                  <div className="aspect-video sm:aspect-[4/5] w-full">
+                  <div className="w-full">
                     {/* Step 1: Show Course & Center only */}
                     {step === 1 && (
                       <>
@@ -661,7 +661,7 @@ const Payments = () => {
 
                                         <button
                                           className={`px-4 py-1 text-sm font-medium rounded transition duration-200 
-    ${isPaid
+                                          ${isPaid
                                               ? "bg-green-400 text-white cursor-not-allowed"
                                               : isNextPayMonth
                                                 ? "bg-red-600 hover:bg-green-700 text-white"
@@ -683,12 +683,6 @@ const Payments = () => {
                                 </div>
                               </div>
                             )}
-
-
-
-
-
-
                           </div>
                         ) : error ? (
                           <div className="text-red-600 mt-4 font-medium">
@@ -705,8 +699,8 @@ const Payments = () => {
                             <div className="ml-3">
                               <p className="text-xs sm:text-sm text-blue-700">
                                 1. Make secure payment through Razorpay in the next step<br />
-                                2. Copy the transaction ID received after payment<br />
-                                3. Submit the ID in the manual payment form to complete registration
+                                2. After payment, please wait for 5 seconds — a “Payment Successful” message will appear at the top right<br />
+                                3. Transaction ID will be captured automatically, no need to copy & paste<br />
                               </p>
                             </div>
                           </div>
@@ -734,109 +728,7 @@ const Payments = () => {
                           Pay : ₹ {finalFees}
                         </button>
                       </div>
-
                     )}
-
-
-                  </div>
-                </div>
-
-
-                {/* Right Column - Manual Payment */}
-                <div className="bg-white rounded-xl shadow-md overflow-hidden h-full">
-                  <div className="px-5 py-3 bg-gradient-to-r from-blue-600 to-blue-700">
-                    <h3 className="text-base sm:text-lg font-semibold text-white tracking-wide">
-                      Submit Manual Payment
-                    </h3>
-                  </div>
-                  <div className="p-4 sm:p-6">
-                    <form onSubmit={handleSubmitPayment} className="space-y-4 sm:space-y-5">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Select Enrollment
-                        </label>
-                        <select
-                          value={selectedEnrollmentId}
-                          onChange={(e) => setSelectedEnrollmentId(e.target.value)}
-                          className="block w-full px-3 py-2 border border-gray-200 rounded-md 
-                            shadow-sm focus:ring-blue-600 focus:border-blue-600 sm:text-sm"
-                          disabled={loading || enrollments.length === 0}
-                        >
-                          {enrollments.length === 0 ? (
-                            <option>No enrollments available</option>
-                          ) : (
-                            enrollments.map((enrollment) => (
-                              <option key={enrollment.enrollment_id} value={enrollment.enrollment_id}>
-                                {enrollment.batches.batch_name}
-                              </option>
-                            ))
-                          )}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Transaction ID
-                        </label>
-                        <input
-                          type="text"
-                          value={transactionId}   // ✅ auto-fill from payment success
-                          readOnly               // 🔹 Prevent manual editing
-                          className="block w-full px-3 py-2 border border-gray-200 rounded-md 
-      shadow-sm focus:ring-blue-600 focus:border-blue-600 sm:text-sm"
-                          placeholder="Auto filled after payment"
-                        />
-
-
-
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Duration (months)
-                        </label>
-                        <input
-                          type="number"
-                          id="duration"
-                          name="duration"
-                          className="block w-full px-3 py-2 border border-gray-200 rounded-md 
-                            shadow-sm focus:ring-blue-600 focus:border-blue-600 sm:text-sm"
-                          placeholder="Enter duration in months (0-12)"
-                          value={duration}
-                          onChange={(e) => {
-                            const value = parseInt(e.target.value, 10);
-                            if (value >= 0 && value <= 12) {
-                              setDuration(value);
-                            }
-                          }}
-                          min="0"
-                          max="12"
-                          required
-                        />
-                      </div>
-                      {/* Duration Input Field */}
-                      <button
-                        type="submit"
-                        disabled={submitting || loading}
-                        className="w-full flex justify-center py-2 px-4 border border-transparent 
-                          rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 
-                          hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 
-                          focus:ring-blue-600 disabled:bg-blue-300 disabled:cursor-not-allowed 
-                          transition-all duration-200"
-                      >
-                        {submitting ? 'Processing...' : 'Submit Payment'}
-                      </button>
-                      <div className="mt-4 bg-blue-50 border border-blue-200 rounded-md p-3 sm:p-4">
-                        <div className="flex">
-                          <div className="flex-shrink-0">
-                            <AlertCircle className="h-5 w-5 text-blue-600" />
-                          </div>
-                          <div className="ml-3">
-                            <p className="text-xs sm:text-sm text-blue-700">
-                              After making a payment through any method, submit the transaction ID here to register your payment.
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    </form>
                   </div>
                 </div>
               </div>

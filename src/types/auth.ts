@@ -1,4 +1,6 @@
 // auth.ts
+
+// ------------------------ AUTH ------------------------
 export interface AuthResponse {
   token: string;
   user: {
@@ -16,6 +18,7 @@ export interface TokenPayload {
   exp: number;
 }
 
+// ------------------------ STUDENT ------------------------
 export interface StudentDetails {
   student_id: string;
   created_at: string;
@@ -41,6 +44,7 @@ export interface StudentDetails {
   };
 }
 
+// ------------------------ AUTH FORMS ------------------------
 export interface RegisterData {
   name: string;
   state: string;
@@ -55,6 +59,7 @@ export interface LoginData {
   password: string;
 }
 
+// ------------------------ STATE & CENTER ------------------------
 export interface State {
   state_id: string;
   state_name: string;
@@ -65,6 +70,7 @@ export interface Center {
   center_name: string;
 }
 
+// ------------------------ BATCHES & COURSES ------------------------
 export interface Batch {
   batch_id: string;
   created_at: string;
@@ -90,14 +96,7 @@ export interface BatchDetails {
   batch_name: string;
   created_at: string;
   duration: string;
-  courses: {
-    course_name: string;
-    type: string;
-    language: string;
-    level: string;
-    mode: string;
-    program: string;
-  };
+  courses: Course;
   centers: {
     center_id: string;
     center_name: string;
@@ -110,6 +109,7 @@ export interface BatchDetails {
   };
 }
 
+// ------------------------ ENROLLMENTS ------------------------
 export interface Enrollment {
   enrollment_id: string;
   created_at: string;
@@ -123,6 +123,7 @@ export interface EnrolledBatchesResponse {
   enrollments: Enrollment[];
 }
 
+// ------------------------ CLASSES ------------------------
 export interface ClassMeet {
   meet_id: string;
   created_at: string;
@@ -144,6 +145,7 @@ export interface Note {
   note: string;
 }
 
+// ------------------------ PAYMENTS ------------------------
 export interface PaymentRequest {
   enrollment_id: string;
   transaction_id: string;
@@ -155,15 +157,16 @@ export interface PaymentTransaction {
   created_at: string;
   transaction_id: string;
   duration: number;
-  status: boolean;
+  status: boolean; // Admin approval
   enrollment_id: string;
+  // Optional relation if needed
   enrollment?: {
+    enrollment_id: string;
     batch: string;
-    status: boolean;
     student: string;
+    status: boolean;
     end_date: string | null;
     created_at: string;
-    enrollment_id: string;
   };
 }
 
@@ -175,4 +178,3 @@ export interface TransactionResponse {
 export interface TransactionsResponse {
   transactions: PaymentTransaction[];
 }
-

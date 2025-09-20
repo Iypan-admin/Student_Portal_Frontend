@@ -16,7 +16,8 @@ import {
   TransactionsResponse,
 } from "../types/auth";
 
-const API_URL = "http://localhost:3006/api";
+// const API_URL = "http://localhost:3006/api";
+const API_URL = "https://student.iypan.com/api"
 
 // Axios instance
 const API = axios.create({

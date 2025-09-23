@@ -171,15 +171,15 @@ export const postPayment = async (paymentData: PaymentRequest, token: string): P
   }
 };
 
-// api.ts
 export const getTransactions = async (token: string): Promise<TransactionsResponse> => {
   try {
-    const response = await axios.get(`${API_URL}/payments/`, {
+    // Remove trailing slash
+    const response = await axios.get(`${API_URL}/payments`, {
       headers: { Authorization: `Bearer ${token}` },
     });
 
-    // Ensure transactions is always an array
-    const transactionsData = response.data.transactions ?? [];
+    // Make sure transactions is always an array
+    const transactionsData = Array.isArray(response.data.transactions) ? response.data.transactions : [];
 
     // Normalize status to boolean
     const transactions = transactionsData.map((txn: any) => ({
@@ -189,8 +189,8 @@ export const getTransactions = async (token: string): Promise<TransactionsRespon
 
     return { transactions };
   } catch (error: any) {
-    console.error('Error fetching transactions:', error.response ? error.response.data : error.message);
-    return { transactions: [] }; // <-- fallback to empty array
+    console.error('Error fetching transactions:', error.response?.data || error.message);
+    return { transactions: [] }; // fallback to empty array
   }
 };
 
@@ -235,5 +235,49 @@ export const getPaymentStatus = async (paymentId: string) => {
   } catch (error: any) {
     console.error("Get Payment Status Error:", error.response?.data || error.message);
     return { success: false, message: "Could not fetch status" };
+  }
+};
+// ------------------------ NOTIFICATIONS ------------------------
+
+// Fetch unread notifications
+export const getNotifications = async (token: string | null) => {
+  if (!token) {
+    console.error("No token provided for fetching notifications.");
+    return { success: false, data: [] };
+  }
+
+  try {
+    const response = await API.get("/notifications", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data; // { success: true, data: [...] }
+  } catch (error: any) {
+    console.error(
+      "Error fetching notifications:",
+      error.response?.data || error.message
+    );
+    return { success: false, data: [] };
+  }
+};
+
+// Mark a notification as read
+export const markNotificationAsRead = async (id: string, token: string | null) => {
+  if (!token) {
+    console.error("No token provided for marking notification as read.");
+    return { success: false };
+  }
+
+  try {
+    // Use {} instead of null for PATCH data
+    const response = await API.patch(`/notifications/${id}`, {}, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data; // { success: true, data: [...] }
+  } catch (error: any) {
+    console.error(
+      "Error marking notification as read:",
+      error.response?.data || error.message
+    );
+    return { success: false };
   }
 };

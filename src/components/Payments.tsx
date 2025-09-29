@@ -56,12 +56,14 @@ const Payments = () => {
   const [statusApproved, setStatusApproved] = useState(false);
   const [emiPaidCount, setEmiPaidCount] = useState(0);
   const [paidMonths, setPaidMonths] = useState<number[]>([]);
+  const [isPaying, setIsPaying] = useState(false); // for disabling buttons during payment
 
   const registrationNumber = studentDetails?.registration_number || "";
 
   // ✅ Payment Success Handler
   const handlePaymentSuccess = async (orderId: string, response: any) => {
     try {
+      // 🔹 Verify payment immediately with backend
       const verifyRes = await verifyPayment({
         razorpay_order_id: orderId,
         razorpay_payment_id: response.razorpay_payment_id,
@@ -69,16 +71,37 @@ const Payments = () => {
       });
 
       if (verifyRes.success) {
+        // 🔹 Show success toast
         toast.success("✅ Payment verified successfully!");
+
+        // 🔹 Update transactions in UI
         fetchTransactions();
+
+        // 🔹 Optional: clear pending payment
+        localStorage.removeItem("pending_payment");
+
+        // 🔹 Wait 3 seconds before redirect
+        setTimeout(() => {
+          // Remove page block overlay
+          window.onbeforeunload = null;
+          const overlay = document.getElementById("payment-block-overlay");
+          if (overlay) overlay.remove();
+
+          // Redirect to payments page
+          window.location.href = "/payments";
+        }, 3000); // 3 seconds delay
       } else {
-        toast.error("⚠️ Payment verification failed");
+        toast.error("⚠️ Payment verification failed. Please retry.");
+        localStorage.setItem("pending_payment", JSON.stringify({ orderId, response }));
       }
     } catch (err) {
       console.error("Payment verification failed:", err);
-      toast.error("Payment verification failed");
+      toast.error("Payment verification failed. Please retry.");
+      localStorage.setItem("pending_payment", JSON.stringify({ orderId, response }));
     }
   };
+
+
 
   // ✅ Fetch Course Fees
   useEffect(() => {
@@ -142,10 +165,7 @@ const Payments = () => {
   const handlePayment = async (amount: number, currentEmi: number = 0) => {
     try {
       const res = await loadRazorpayScript();
-      if (!res) {
-        toast.error("❌ Failed to load Razorpay SDK.");
-        return;
-      }
+      if (!res) return toast.error("❌ Failed to load Razorpay SDK.");
 
       const data = await createRazorpayOrder({
         amount,
@@ -164,10 +184,7 @@ const Payments = () => {
         current_emi: paymentType === "emi" ? currentEmi : null,
       });
 
-      if (!data?.success || !data.order || !data.key) {
-        toast.error("❌ Order creation failed.");
-        return;
-      }
+      if (!data?.success || !data.order || !data.key) return toast.error("❌ Order creation failed.");
 
       const options = {
         key: data.key,
@@ -182,6 +199,25 @@ const Payments = () => {
           contact: studentDetails?.phone || "9999999999",
         },
         handler: async (response: any) => {
+          // 🔹 Start page block immediately
+          window.onbeforeunload = (e) => {
+            e.preventDefault();
+            e.returnValue = "⚠️ Payment is processing, please wait...";
+            return "⚠️ Payment is processing, please wait...";
+          };
+
+          const overlay = document.createElement("div");
+          overlay.id = "payment-block-overlay";
+          overlay.style.position = "fixed";
+          overlay.style.top = "0";
+          overlay.style.left = "0";
+          overlay.style.width = "100%";
+          overlay.style.height = "100%";
+          overlay.style.zIndex = "9999";
+          overlay.style.backgroundColor = "rgba(255,255,255,0.4)";
+          document.body.appendChild(overlay);
+
+          // 🔹 Call the payment verification
           await handlePaymentSuccess(data.order.id, response);
         },
         modal: {
@@ -194,10 +230,12 @@ const Payments = () => {
 
       const rzp = new (window as any).Razorpay(options);
       rzp.open();
+
       rzp.on("payment.failed", (response: any) => {
         console.error("Payment Failed:", response.error);
         toast.error("❌ Payment failed. Please try again.");
       });
+
     } catch (err) {
       console.error("Razorpay error:", err);
       toast.error("❌ Something went wrong while initiating payment.");
@@ -498,21 +536,45 @@ const Payments = () => {
                                   value={`₹${finalFees}`}
                                   className="block w-full px-3 py-2 border border-gray-200 rounded-md shadow-sm sm:text-sm mr-4"
                                 />
+                                {/* Full Fees */}
                                 <button
                                   className={`px-4 py-2 text-sm rounded border text-white border-transparent transition duration-200 
-                                  ${statusApproved ? "bg-green-400 cursor-not-allowed" : "bg-red-600 hover:bg-green-700"}`}
-                                  onClick={() => handlePayment(finalFees)}
-                                  disabled={statusApproved}
+  ${statusApproved || isPaying ? "bg-green-400 cursor-not-allowed" : "bg-red-600 hover:bg-green-700"}`}
+                                  onClick={async () => {
+                                    setIsPaying(true); // disable button immediately
+                                    await handlePayment(finalFees);
+                                    setIsPaying(false);
+                                  }}
+                                  disabled={statusApproved || isPaying}
                                 >
-                                  {statusApproved ? "Paid" : "Pay"}
+                                  {statusApproved ? "Paid" : isPaying ? "Processing..." : "Pay"}
                                 </button>
                               </div>
+                              <div className="mt-2 bg-blue-50 border border-blue-200 rounded-md p-3 sm:p-4">
+                                <div className="flex">
+                                  <div className="flex-shrink-0">
+                                    <AlertCircle className="h-5 w-5 text-blue-600" />
+                                  </div>
+                                  <div className="ml-3">
+                                    <p className="text-xs sm:text-sm text-blue-700 space-y-1">
+                                      ⚠️ Important Payment Instructions:<br />
+                                      1. After completing the payment, the page will automatically redirect in ~5 seconds.<br />
+                                      2. <strong>Do not refresh or close the page</strong> until the redirection occurs.<br />
+                                      3. After redirection, you will see the payment marked as <strong>Verified</strong> on the top right.<br />
+                                      4. Please wait patiently until verification completes; closing or refreshing may cause payment issues.
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+
                             </div>
                           )}
 
                           {/* EMI Section */}
                           {paymentType === "emi" && (
                             <div className="bg-gray-50 p-4 rounded-md shadow mb-4 space-y-2">
+
+                              {/* EMI Month Buttons */}
                               {Array.from({ length: emiMonths }).map((_, idx) => {
                                 const month = idx + 1;
                                 const monthlyAmount = Math.round(finalFees / emiMonths);
@@ -531,25 +593,47 @@ const Payments = () => {
                                     </div>
                                     <button
                                       className={`px-4 py-1 text-sm font-medium rounded transition duration-200 
-                                        ${isPaid
+                      ${isPaid
                                           ? "bg-green-400 text-white cursor-not-allowed"
                                           : isNextPayMonth
-                                            ? "bg-red-600 hover:bg-green-700 text-white"
+                                            ? isPaying ? "bg-yellow-400 text-white cursor-not-allowed" : "bg-red-600 hover:bg-green-700 text-white"
                                             : "bg-yellow-300 text-gray-800 cursor-not-allowed"}`}
-                                      onClick={() => {
+                                      onClick={async () => {
                                         if (isNextPayMonth && !isPaid) {
-                                          handlePayment(monthlyAmount, month);
+                                          setIsPaying(true);
+                                          await handlePayment(monthlyAmount, month);
+                                          setIsPaying(false);
                                         }
                                       }}
-                                      disabled={isDisabled}
+                                      disabled={isDisabled || isPaying}
                                     >
-                                      {isPaid ? "Paid" : isNextPayMonth ? "Pay Now" : "Upcoming"}
+                                      {isPaid ? "Paid" : isNextPayMonth ? (isPaying ? "Processing..." : "Pay Now") : "Upcoming"}
                                     </button>
                                   </div>
                                 );
                               })}
+
+                              {/* ⚠️ Payment Disclaimer at bottom */}
+                              <div className="mt-4 bg-blue-50 border border-blue-200 rounded-md p-3 sm:p-4">
+                                <div className="flex">
+                                  <div className="flex-shrink-0">
+                                    <AlertCircle className="h-5 w-5 text-blue-600" />
+                                  </div>
+                                  <div className="ml-3">
+                                    <p className="text-xs sm:text-sm text-blue-700 space-y-1">
+                                      ⚠️ Important Payment Instructions:<br />
+                                      1. After completing the payment, the page will automatically redirect in ~5 seconds.<br />
+                                      2. <strong>Do not refresh or close the page</strong> until the redirection occurs.<br />
+                                      3. After redirection, you will see the payment marked as <strong>Verified</strong> on the top right.<br />
+                                      4. Please wait patiently until verification completes; closing or refreshing may cause payment issues.
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+
                             </div>
                           )}
+
                         </div>
                       ) : (
                         <p className="text-gray-500 mt-4">{error || "Loading course fee details..."}</p>
@@ -640,9 +724,9 @@ const Payments = () => {
 
             </div>
           </div>
-        </main>
-      </div>
-    </div>
+        </main >
+      </div >
+    </div >
   );
 };
 

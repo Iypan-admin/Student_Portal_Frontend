@@ -277,10 +277,56 @@ const LoginForm = () => {
       {/* Footer */}
       <footer className="bg-white border-t">
         <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-wrap justify-center gap-3 sm:gap-4 mb-4">
+            <a
+              href="https://www.indianschoolformodernlanguages.com/terms"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-blue-600 hover:text-blue-800 hover:underline transition-colors duration-200"
+            >
+              Terms & Conditions
+            </a>
+            <span className="text-gray-300">|</span>
+            <a
+              href="https://www.indianschoolformodernlanguages.com/privacy"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-blue-600 hover:text-blue-800 hover:underline transition-colors duration-200"
+            >
+              Privacy Policy
+            </a>
+            <span className="text-gray-300">|</span>
+            <a
+              href="https://www.indianschoolformodernlanguages.com/shipping"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-blue-600 hover:text-blue-800 hover:underline transition-colors duration-200"
+            >
+              Shipping Policy
+            </a>
+            <span className="text-gray-300">|</span>
+            <a
+              href="https://www.indianschoolformodernlanguages.com/refund"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-blue-600 hover:text-blue-800 hover:underline transition-colors duration-200"
+            >
+              Refund & Cancellation Policy
+            </a>
+            <span className="text-gray-300">|</span>
+            <a
+              href="https://www.indianschoolformodernlanguages.com/contact"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-blue-600 hover:text-blue-800 hover:underline transition-colors duration-200"
+            >
+              Contact Us
+            </a>
+          </div>
           <p className="text-center text-sm text-gray-500">
-            © {new Date().getFullYear()} Indian School for Modern Languages. All rights reserved.
+            © 2025 Indian School for Modern Languages. All rights reserved.
           </p>
-          <p className="text-center text-sm text-gray-500">
+          <p className="text-center text-sm text-gray-500 mt-2">
             Version 1.0
           </p>
         </div>

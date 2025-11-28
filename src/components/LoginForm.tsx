@@ -19,15 +19,18 @@ const LoginForm = () => {
   const [newPassword, setNewPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       const response = await login(formData);
       setToken(response.token);
       toast.success('Login successful!');
       navigate('/dashboard');
-    } catch (error) {
-      toast.error('Login failed. Please check your credentials.');
+    } catch (error: any) {
+      console.error('Login error details:', error);
+      // Show actual error message from backend
+      const errorMessage = error.message || error.response?.data?.error || 'Login failed. Please check your credentials.';
+      toast.error(errorMessage);
     }
   };
 

@@ -1,7 +1,6 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  LogOut,
   CreditCard,
   Clock,
   Check,
@@ -18,6 +17,7 @@ import {
   lockPaymentType,
   createRazorpayOrder,
   verifyPayment,
+  getPaymentStatus,
 } from "../services/api";
 import { Enrollment, PaymentTransaction } from "../types/auth";
 import Sidebar from "./parts/Sidebar";
@@ -62,43 +62,57 @@ const Payments = () => {
 
   // ✅ Payment Success Handler
   const handlePaymentSuccess = async (orderId: string, response: any) => {
-    try {
-      // 🔹 Verify payment immediately with backend
-      const verifyRes = await verifyPayment({
-        razorpay_order_id: orderId,
-        razorpay_payment_id: response.razorpay_payment_id,
-        razorpay_signature: response.razorpay_signature,
+    // 🔹 CRITICAL: Store payment data IMMEDIATELY in localStorage (before any async operations)
+    // This ensures data is saved even if user closes page during 3 second wait
+    const paymentData = {
+      orderId,
+      response,
+      timestamp: new Date().toISOString(),
+      verified: false // Will be set to true after verification
+    };
+    localStorage.setItem("pending_payment", JSON.stringify(paymentData));
+
+    // 🔹 Show success message immediately (don't wait for verification)
+    toast.success("✅ Payment successful! Verifying...");
+
+    // 🔹 Start verification in background (fire-and-forget style)
+    // Don't block the UI - webhook will also handle this
+    verifyPayment({
+      razorpay_order_id: orderId,
+      razorpay_payment_id: response.razorpay_payment_id,
+      razorpay_signature: response.razorpay_signature,
+    })
+      .then((verifyRes) => {
+        if (verifyRes.success) {
+          console.log("✅ Frontend verification successful");
+          // Update localStorage to mark as verified
+          paymentData.verified = true;
+          localStorage.setItem("pending_payment", JSON.stringify(paymentData));
+          
+          // Update transactions in UI
+          fetchTransactions();
+          
+          toast.success("✅ Payment verified successfully!");
+        } else {
+          console.log("⚠️ Frontend verification failed, but webhook will handle it");
+          // Don't show error - webhook will store payment automatically
+        }
+      })
+      .catch((err) => {
+        console.error("⚠️ Frontend verification error (webhook will handle):", err);
+        // Don't show error - webhook will store payment automatically
       });
 
-      if (verifyRes.success) {
-        // 🔹 Show success toast
-        toast.success("✅ Payment verified successfully!");
+    // 🔹 Wait 3 seconds before redirect (user can close page - webhook will handle storage)
+    setTimeout(() => {
+      // Remove page block overlay
+      window.onbeforeunload = null;
+      const overlay = document.getElementById("payment-block-overlay");
+      if (overlay) overlay.remove();
 
-        // 🔹 Update transactions in UI
-        fetchTransactions();
-
-        // 🔹 Optional: clear pending payment
-        localStorage.removeItem("pending_payment");
-
-        // 🔹 Wait 3 seconds before redirect
-        setTimeout(() => {
-          // Remove page block overlay
-          window.onbeforeunload = null;
-          const overlay = document.getElementById("payment-block-overlay");
-          if (overlay) overlay.remove();
-
-          // Redirect to payments page
-          window.location.href = "/payments";
-        }, 3000); // 3 seconds delay
-      } else {
-        toast.error("⚠️ Payment verification failed. Please retry.");
-        localStorage.setItem("pending_payment", JSON.stringify({ orderId, response }));
-      }
-    } catch (err) {
-      console.error("Payment verification failed:", err);
-      toast.error("Payment verification failed. Please retry.");
-      localStorage.setItem("pending_payment", JSON.stringify({ orderId, response }));
-    }
+      // Redirect to payments page
+      window.location.href = "/payments";
+    }, 3000); // 3 seconds delay
   };
 
 
@@ -222,18 +236,50 @@ const Payments = () => {
         },
         modal: {
           ondismiss: () =>
-            toast.info("ℹ️ Payment popup closed without completing."),
+            toast.error("ℹ️ Payment popup closed without completing."),
           escape: true,
         },
         theme: { color: "#3399cc" },
       };
 
       const rzp = new (window as any).Razorpay(options);
+      
+      // 🔹 Additional error handlers
+      rzp.on("payment.authorized", () => {
+        console.log("✅ Payment authorized");
+      });
+      
+      rzp.on("payment.captured", () => {
+        console.log("✅ Payment captured");
+      });
+      
       rzp.open();
 
       rzp.on("payment.failed", (response: any) => {
         console.error("Payment Failed:", response.error);
-        toast.error("❌ Payment failed. Please try again.");
+        const errorDescription = response.error?.description || response.error?.reason || "";
+        const errorCode = response.error?.code || "";
+        
+        // 🔹 Check for domain registration error
+        if (errorDescription.includes("website does not match") || 
+            errorDescription.includes("registered website") ||
+            errorCode === "BAD_REQUEST_ERROR") {
+          toast.error("❌ Payment blocked: Domain not registered in Razorpay. Please contact admin.", {
+            duration: 5000,
+          });
+          console.error("🔴 CRITICAL: Domain registration issue in Razorpay dashboard");
+          console.error("🔴 Error details:", {
+            code: errorCode,
+            description: errorDescription,
+            fullError: response.error
+          });
+        } else if (errorDescription.includes("network") || errorDescription.includes("timeout")) {
+          toast.error("❌ Network error. Please check your connection and try again.");
+        } else if (errorDescription.includes("insufficient") || errorDescription.includes("balance")) {
+          toast.error("❌ Insufficient balance. Please check your account.");
+        } else {
+          toast.error(`❌ Payment failed: ${errorDescription || "Unknown error"}. Please try again.`);
+        }
       });
 
     } catch (err) {
@@ -282,7 +328,7 @@ const Payments = () => {
         (txn) => txn.payment_type === "emi" && txn.status
       );
       setEmiPaidCount(emiPaid.length);
-      setPaidMonths(emiPaid.map((e) => e.current_emi));
+      setPaidMonths(emiPaid.map((e) => e.current_emi).filter((emi): emi is number => emi !== null && emi !== undefined));
     } catch (error) {
       console.error("Failed to fetch transactions:", error);
       toast.error("Failed to load transactions.");
@@ -296,10 +342,165 @@ const Payments = () => {
     fetchTransactions();
   }, [token, registrationNumber]);
 
-  const handleLogout = () => {
-    setToken(null);
-    navigate("/login");
-  };
+  // ✅ Check for pending payments on page load (if user closed page during payment)
+  useEffect(() => {
+    const checkPendingPayment = async () => {
+      const pendingPaymentStr = localStorage.getItem("pending_payment");
+      if (pendingPaymentStr && token) {
+        try {
+          const pendingPayment = JSON.parse(pendingPaymentStr);
+          const { orderId, response, verified, timestamp } = pendingPayment;
+          
+          // Check if payment is older than 5 minutes (likely already processed by webhook)
+          const paymentTime = new Date(timestamp).getTime();
+          const now = new Date().getTime();
+          const minutesDiff = (now - paymentTime) / (1000 * 60);
+          
+          if (minutesDiff > 5) {
+            // Payment is old, likely already processed by webhook
+            console.log("🔄 Old pending payment found, checking transactions...");
+            fetchTransactions();
+            localStorage.removeItem("pending_payment");
+            return;
+          }
+
+          // If already verified, just refresh transactions
+          if (verified) {
+            console.log("✅ Payment already verified, refreshing transactions...");
+            fetchTransactions();
+            localStorage.removeItem("pending_payment");
+            return;
+          }
+
+          console.log("🔄 Found pending payment, attempting verification...");
+          
+          const verifyRes = await verifyPayment({
+            razorpay_order_id: orderId,
+            razorpay_payment_id: response.razorpay_payment_id,
+            razorpay_signature: response.razorpay_signature,
+          });
+
+          if (verifyRes.success) {
+            toast.success("✅ Payment verified successfully!");
+            localStorage.removeItem("pending_payment");
+            fetchTransactions();
+          } else {
+            // 🔹 ADVANCED: Poll payment status from Razorpay API as backup
+            console.log("⚠️ Verification failed, polling payment status from Razorpay...");
+            
+            let pollCount = 0;
+            const maxPolls = 5; // Poll 5 times (25 seconds total)
+            const pollInterval = 5000; // 5 seconds between polls
+            
+            const pollPaymentStatus = async () => {
+              try {
+                const statusRes = await getPaymentStatus(response.razorpay_payment_id);
+                
+                if (statusRes.success && statusRes.payment?.in_database) {
+                  // Payment found in database (webhook stored it)
+                  console.log("✅ Payment found in database via polling!");
+                  toast.success("✅ Payment confirmed!");
+                  localStorage.removeItem("pending_payment");
+                  fetchTransactions();
+                  return true; // Stop polling
+                }
+                
+                pollCount++;
+                if (pollCount < maxPolls) {
+                  // Continue polling
+                  setTimeout(pollPaymentStatus, pollInterval);
+                } else {
+                  // Max polls reached, check transactions one last time
+                  console.log("⚠️ Max polls reached, checking transactions...");
+                  fetchTransactions();
+                  setTimeout(() => {
+                    fetchTransactions(); // Check again after 5 more seconds
+                    localStorage.removeItem("pending_payment");
+                  }, 5000);
+                }
+              } catch (pollErr) {
+                console.error("Polling error:", pollErr);
+                pollCount++;
+                if (pollCount < maxPolls) {
+                  setTimeout(pollPaymentStatus, pollInterval);
+                } else {
+                  fetchTransactions();
+                  localStorage.removeItem("pending_payment");
+                }
+              }
+            };
+            
+            // Start polling after 3 seconds (give webhook time)
+            setTimeout(pollPaymentStatus, 3000);
+          }
+        } catch (err) {
+          console.error("Pending payment verification failed:", err);
+          
+          // 🔹 ADVANCED: Poll payment status as backup
+          try {
+            const pendingPayment = JSON.parse(pendingPaymentStr);
+            if (pendingPayment?.response?.razorpay_payment_id) {
+              let pollCount = 0;
+              const maxPolls = 5;
+              const pollInterval = 5000;
+              
+              const pollPaymentStatus = async () => {
+                try {
+                  const statusRes = await getPaymentStatus(pendingPayment.response.razorpay_payment_id);
+                
+                if (statusRes.success && statusRes.payment?.in_database) {
+                  console.log("✅ Payment found in database via polling!");
+                  toast.success("✅ Payment confirmed!");
+                  localStorage.removeItem("pending_payment");
+                  fetchTransactions();
+                  return true;
+                }
+                
+                pollCount++;
+                if (pollCount < maxPolls) {
+                  setTimeout(pollPaymentStatus, pollInterval);
+                } else {
+                  fetchTransactions();
+                  localStorage.removeItem("pending_payment");
+                }
+              } catch (pollErr) {
+                console.error("Polling error:", pollErr);
+                pollCount++;
+                if (pollCount < maxPolls) {
+                  setTimeout(pollPaymentStatus, pollInterval);
+                } else {
+                  fetchTransactions();
+                  localStorage.removeItem("pending_payment");
+                }
+              }
+            };
+            
+            setTimeout(pollPaymentStatus, 3000);
+            } else {
+              // No payment ID, just check transactions
+              setTimeout(() => {
+                fetchTransactions();
+                localStorage.removeItem("pending_payment");
+              }, 3000);
+            }
+          } catch (parseErr) {
+            // Failed to parse, just check transactions
+            setTimeout(() => {
+              fetchTransactions();
+              localStorage.removeItem("pending_payment");
+            }, 3000);
+          }
+        }
+      }
+    };
+
+    if (token && registrationNumber) {
+      // Wait a bit for webhook to process (if user closed page)
+      setTimeout(() => {
+        checkPendingPayment();
+      }, 2000); // 2 second delay to allow webhook to process
+    }
+  }, [token, registrationNumber]);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -539,15 +740,15 @@ const Payments = () => {
                                 {/* Full Fees */}
                                 <button
                                   className={`px-4 py-2 text-sm rounded border text-white border-transparent transition duration-200 
-  ${statusApproved || isPaying ? "bg-green-400 cursor-not-allowed" : "bg-red-600 hover:bg-green-700"}`}
+  ${statusApproved || isPaying || !isLocked ? "bg-green-400 cursor-not-allowed" : "bg-red-600 hover:bg-green-700"}`}
                                   onClick={async () => {
                                     setIsPaying(true); // disable button immediately
                                     await handlePayment(finalFees);
                                     setIsPaying(false);
                                   }}
-                                  disabled={statusApproved || isPaying}
+                                  disabled={statusApproved || isPaying || !isLocked}
                                 >
-                                  {statusApproved ? "Paid" : isPaying ? "Processing..." : "Pay"}
+                                  {statusApproved ? "Paid" : isPaying ? "Processing..." : !isLocked ? "Please Confirm Selection" : "Pay"}
                                 </button>
                               </div>
                               <div className="mt-2 bg-blue-50 border border-blue-200 rounded-md p-3 sm:p-4">
@@ -580,8 +781,10 @@ const Payments = () => {
                                 const monthlyAmount = Math.round(finalFees / emiMonths);
                                 const isPaid = paidMonths.includes(month);
                                 const lastPaid = paidMonths.length > 0 ? Math.max(...paidMonths) : 0;
-                                const isNextPayMonth = month === lastPaid + 1;
-                                const isDisabled = isPaid || !isNextPayMonth;
+                                // For EMI: Only enable first month initially, then sequential after payments
+                                const isNextPayMonth = paidMonths.length === 0 ? month === 1 : month === lastPaid + 1;
+                                // Disable if not locked, already paid, not next month, or currently paying
+                                const isDisabled = !isLocked || isPaid || !isNextPayMonth || isPaying;
 
                                 return (
                                   <div
@@ -595,19 +798,21 @@ const Payments = () => {
                                       className={`px-4 py-1 text-sm font-medium rounded transition duration-200 
                       ${isPaid
                                           ? "bg-green-400 text-white cursor-not-allowed"
-                                          : isNextPayMonth
-                                            ? isPaying ? "bg-yellow-400 text-white cursor-not-allowed" : "bg-red-600 hover:bg-green-700 text-white"
-                                            : "bg-yellow-300 text-gray-800 cursor-not-allowed"}`}
+                                          : !isLocked
+                                            ? "bg-gray-400 text-white cursor-not-allowed"
+                                            : isNextPayMonth
+                                              ? isPaying ? "bg-yellow-400 text-white cursor-not-allowed" : "bg-red-600 hover:bg-green-700 text-white"
+                                              : "bg-yellow-300 text-gray-800 cursor-not-allowed"}`}
                                       onClick={async () => {
-                                        if (isNextPayMonth && !isPaid) {
+                                        if (isNextPayMonth && !isPaid && isLocked) {
                                           setIsPaying(true);
                                           await handlePayment(monthlyAmount, month);
                                           setIsPaying(false);
                                         }
                                       }}
-                                      disabled={isDisabled || isPaying}
+                                      disabled={isDisabled}
                                     >
-                                      {isPaid ? "Paid" : isNextPayMonth ? (isPaying ? "Processing..." : "Pay Now") : "Upcoming"}
+                                      {isPaid ? "Paid" : !isLocked ? "Please Confirm Selection" : isNextPayMonth ? (isPaying ? "Processing..." : "Pay Now") : "Upcoming"}
                                     </button>
                                   </div>
                                 );

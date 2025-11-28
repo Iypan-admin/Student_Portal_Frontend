@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { LogOut, Calendar, Clock, CheckCircle, CalendarDays, CalendarClock } from 'lucide-react';
+import { LogOut, Calendar, Clock, CheckCircle, CalendarDays, CalendarClock, RefreshCw } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { getClassMeets } from '../services/api';
 import { ClassMeet } from '../types/auth';
@@ -15,23 +15,28 @@ const Class = () => {
   const [activeTab, setActiveTab] = useState('current'); // 'current', 'previous', or 'upcoming'
 
   // Fetch Google Meet classes for the batch
-  useEffect(() => {
-    const fetchClassMeets = async () => {
-      if (batchId && token) {
-        try {
-          setLoading(true);
-          const meets = await getClassMeets(batchId, token);
-          setClassMeets(meets);
-        } catch (error) {
-          console.error('Failed to fetch class meets:', error);
-        } finally {
-          setLoading(false);
-        }
+  const fetchClassMeets = async () => {
+    if (batchId && token) {
+      try {
+        setLoading(true);
+        const meets = await getClassMeets(batchId, token);
+        setClassMeets(meets);
+      } catch (error) {
+        console.error('Failed to fetch class meets:', error);
+      } finally {
+        setLoading(false);
       }
-    };
+    }
+  };
 
+  useEffect(() => {
     fetchClassMeets();
   }, [batchId, token]);
+
+  // Handle refresh button click
+  const handleRefresh = () => {
+    fetchClassMeets();
+  };
 
   const handleLogout = () => {
     setToken(null);
@@ -208,11 +213,17 @@ const Class = () => {
               </div>
             ) : getClassesToDisplay().length === 0 ? (
               <div className="bg-white rounded-xl shadow-md overflow-hidden">
-                <div className="px-5 py-3 bg-gradient-to-r from-blue-600 to-blue-700">
+                <div className="px-5 py-3 bg-gradient-to-r from-blue-600 to-blue-700 flex items-center justify-between">
                   <h3 className="text-base sm:text-lg font-semibold text-white tracking-wide">
                     {activeTab === 'current' ? "Today's Classes" : 
                      activeTab === 'previous' ? "Previous Classes" : "Upcoming Classes"}
                   </h3>
+                  <button
+                    onClick={handleRefresh}
+                    className="px-3 py-1 text-xs text-white bg-blue-800 hover:bg-blue-900 rounded-md transition-colors duration-200"
+                  >
+                    Refresh
+                  </button>
                 </div>
                 <div className="p-4 sm:p-6">
                   <div className="text-center py-6 sm:py-8">
@@ -231,11 +242,17 @@ const Class = () => {
               </div>
             ) : (
               <div className="bg-white rounded-xl shadow-md overflow-hidden">
-                <div className="px-5 py-3 bg-gradient-to-r from-blue-600 to-blue-700">
+                <div className="px-5 py-3 bg-gradient-to-r from-blue-600 to-blue-700 flex items-center justify-between">
                   <h3 className="text-base sm:text-lg font-semibold text-white tracking-wide">
                     {activeTab === 'current' ? "Today's Classes" : 
                      activeTab === 'previous' ? "Previous Classes" : "Upcoming Classes"}
                   </h3>
+                  <button
+                    onClick={handleRefresh}
+                    className="px-3 py-1 text-xs text-white bg-blue-800 hover:bg-blue-900 rounded-md transition-colors duration-200"
+                  >
+                    Refresh
+                  </button>
                 </div>
                 <div className="p-4 sm:p-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

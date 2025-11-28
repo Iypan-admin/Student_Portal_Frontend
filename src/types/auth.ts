@@ -155,10 +155,24 @@ export interface PaymentRequest {
 export interface PaymentTransaction {
   payment_id: string;
   created_at: string;
-  transaction_id: string;
-  duration: number;
+  transaction_id?: string; // Optional (legacy field)
+  duration?: number; // Optional (legacy field)
   status: boolean; // Admin approval
   enrollment_id: string;
+  registration_number?: string;
+  student_name?: string;
+  email?: string;
+  contact?: string;
+  course_name?: string;
+  course_duration?: number;
+  original_fees?: number;
+  discount_percentage?: number;
+  final_fees?: number;
+  payment_type?: "full" | "emi";
+  emi_duration?: number | null;
+  current_emi?: number | null;
+  order_id?: string;
+  bank_rrn?: string | null;
   // Optional relation if needed
   enrollment?: {
     enrollment_id: string;

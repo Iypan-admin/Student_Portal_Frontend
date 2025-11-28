@@ -32,8 +32,14 @@ export const register = async (data: RegisterData): Promise<AuthResponse> => {
 };
 
 export const login = async (data: LoginData): Promise<AuthResponse> => {
-  const response = await API.post("/students/login", data);
-  return response.data;
+  try {
+    const response = await API.post("/students/login", data);
+    return response.data;
+  } catch (error: any) {
+    console.error("Login API Error:", error.response?.data || error.message);
+    // Throw error with backend message for better error handling
+    throw new Error(error.response?.data?.error || error.message || "Login failed");
+  }
 };
 
 // ------------------------ STUDENT / CENTER ------------------------
@@ -235,6 +241,21 @@ export const getPaymentStatus = async (paymentId: string) => {
   } catch (error: any) {
     console.error("Get Payment Status Error:", error.response?.data || error.message);
     return { success: false, message: "Could not fetch status" };
+  }
+};
+
+// 🔹 Advanced: Reconcile payments (find missed payments)
+export const reconcilePayments = async (enrollmentId?: string, orderId?: string) => {
+  try {
+    const params = new URLSearchParams();
+    if (enrollmentId) params.append("enrollment_id", enrollmentId);
+    if (orderId) params.append("order_id", orderId);
+    
+    const { data } = await API.get(`/razorpay/reconcile?${params.toString()}`);
+    return data;
+  } catch (error: any) {
+    console.error("Reconcile Payments Error:", error.response?.data || error.message);
+    return { success: false, message: "Could not reconcile payments" };
   }
 };
 // ------------------------ NOTIFICATIONS ------------------------

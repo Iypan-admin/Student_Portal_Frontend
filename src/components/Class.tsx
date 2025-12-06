@@ -281,20 +281,27 @@ const Class = () => {
                           <span className="font-medium">Note:</span> {meet.note}
                         </p>
                         <div className="mt-4">
-                          <a
-                            href={meet.meet_link}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className={`inline-block px-4 py-2 text-white text-xs sm:text-sm font-medium rounded-md transition-colors duration-200 ${
-                              activeTab === 'current' 
-                                ? 'bg-blue-600 hover:bg-blue-700' 
-                                : activeTab === 'previous'
-                                  ? 'bg-gray-600 hover:bg-gray-700'
+                          {activeTab === 'previous' ? (
+                            <button
+                              disabled
+                              className="inline-block px-4 py-2 text-white text-xs sm:text-sm font-medium rounded-md transition-colors duration-200 bg-gray-600 opacity-50 cursor-not-allowed"
+                            >
+                              Join Now
+                            </button>
+                          ) : (
+                            <a
+                              href={meet.meet_link}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className={`inline-block px-4 py-2 text-white text-xs sm:text-sm font-medium rounded-md transition-colors duration-200 ${
+                                activeTab === 'current' 
+                                  ? 'bg-blue-600 hover:bg-blue-700' 
                                   : 'bg-green-600 hover:bg-green-700'
-                            }`}
-                          >
-                            {activeTab === 'previous' ? 'View Recording' : 'Join Meeting'}
-                          </a>
+                              }`}
+                            >
+                              Join Meeting
+                            </a>
+                          )}
                         </div>
                       </div>
                     ))}

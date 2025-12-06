@@ -107,55 +107,55 @@ const Sidebar = () => {
         </div>
 
         {/* Student Profile Section with Logout */}
-        <div className="sticky bottom-0 p-6 bg-blue-950/80 backdrop-blur-sm 
-  border-t border-blue-800/50 space-y-4">
+        <div className="sticky bottom-0 p-3 md:p-6 lg:p-6 bg-blue-950/80 backdrop-blur-sm 
+  border-t border-blue-800/50 space-y-2 md:space-y-4 lg:space-y-4">
 
           {/* Title */}
-          <h3 className="text-base font-semibold mb-3 text-blue-200 tracking-wide">
+          <h3 className="text-sm md:text-base lg:text-base font-semibold mb-2 md:mb-3 lg:mb-3 text-blue-200 tracking-wide">
             Student Profile
           </h3>
 
           {/* Student Basic Details */}
           {loading ? (
-            <p className="text-sm text-blue-300/70 italic animate-pulse">
+            <p className="text-xs md:text-sm lg:text-sm text-blue-300/70 italic animate-pulse">
               Loading details...
             </p>
           ) : studentDetails ? (
-            <div className="space-y-1.5 text-sm">
-              <p className="flex items-center gap-2">
-                <span className="font-medium text-blue-200 w-16">Name:</span>
+            <div className="space-y-1 md:space-y-1.5 lg:space-y-1.5 text-xs md:text-sm lg:text-sm">
+              <p className="flex items-center gap-1 md:gap-2 lg:gap-2">
+                <span className="font-medium text-blue-200 w-12 md:w-16 lg:w-16">Name:</span>
                 <span className="text-blue-100">{studentDetails.name}</span>
               </p>
-              <p className="flex items-center gap-2">
-                <span className="font-medium text-blue-200 w-16">Email:</span>
+              <p className="flex items-center gap-1 md:gap-2 lg:gap-2">
+                <span className="font-medium text-blue-200 w-12 md:w-16 lg:w-16">Email:</span>
                 <span className="text-blue-100">{studentDetails.email}</span>
               </p>
-              <p className="flex items-center gap-2">
-                <span className="font-medium text-blue-200 w-16">Reg No:</span>
+              <p className="flex items-center gap-1 md:gap-2 lg:gap-2">
+                <span className="font-medium text-blue-200 w-12 md:w-16 lg:w-16">Reg No:</span>
                 <span className="text-blue-100">{studentDetails.registration_number}</span>
               </p>
-              <p className="flex items-center gap-2">
-                <span className="font-medium text-blue-200 w-16">Center:</span>
+              <p className="flex items-center gap-1 md:gap-2 lg:gap-2">
+                <span className="font-medium text-blue-200 w-12 md:w-16 lg:w-16">Center:</span>
                 <span className="text-blue-100">{studentDetails.center.center_name}</span>
               </p>
 
               {/* 🎖️ Elite Card Details Section */}
-              <div className="pt-3 mt-3 border-t border-blue-800/30">
-                <h4 className="text-sm font-semibold text-blue-300 mb-2">
+              <div className="pt-2 md:pt-3 lg:pt-3 mt-2 md:mt-3 lg:mt-3 border-t border-blue-800/30">
+                <h4 className="text-xs md:text-sm lg:text-sm font-semibold text-blue-300 mb-1 md:mb-2 lg:mb-2">
                   Elite Card Details
                 </h4>
-                <p className="flex items-center gap-2">
-                  <span className="font-medium text-blue-200 w-16">Card Type:</span>
+                <p className="flex items-center gap-1 md:gap-2 lg:gap-2">
+                  <span className="font-medium text-blue-200 w-12 md:w-16 lg:w-16">Card Type:</span>
                   <span className="text-blue-100">{eliteCard?.card_type || 'N/A'}</span>
                 </p>
-                <p className="flex items-center gap-2">
-                  <span className="font-medium text-blue-200 w-16">Card No:</span>
+                <p className="flex items-center gap-1 md:gap-2 lg:gap-2">
+                  <span className="font-medium text-blue-200 w-12 md:w-16 lg:w-16">Card No:</span>
                   <span className="text-blue-100">{eliteCard?.card_number || 'N/A'}</span>
                 </p>
               </div>
             </div>
           ) : (
-            <p className="text-sm text-red-400 font-medium">
+            <p className="text-xs md:text-sm lg:text-sm text-red-400 font-medium">
               Unable to load details.
             </p>
           )}
@@ -163,7 +163,7 @@ const Sidebar = () => {
           {/* Logout Button */}
           <button
             onClick={handleLogout}
-            className="w-full mt-4 py-2.5 px-4 rounded-lg text-sm font-medium
+            className="w-full mt-2 md:mt-4 lg:mt-4 py-2 md:py-2.5 lg:py-2.5 px-3 md:px-4 lg:px-4 rounded-lg text-xs md:text-sm lg:text-sm font-medium
       bg-red-600/20 hover:bg-red-600/70 text-red-100
       transition-all duration-200 ease-in-out
       border border-red-500/30 hover:border-red-500/50"

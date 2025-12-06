@@ -1,17 +1,23 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { getStudentDetails, fetchEliteCard } from '../../services/api';
 import { StudentDetails } from '../../types/auth';
 import { Menu, X } from 'lucide-react';
 
+interface EliteCard {
+  card_type?: string;
+  card_number?: string;
+}
+
 const Sidebar = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { token, tokenData, setToken } = useAuth();
   const [studentDetails, setStudentDetails] = useState<StudentDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [isOpen, setIsOpen] = useState(false);
-  const [eliteCard, setEliteCard] = useState(null);
+  const [eliteCard, setEliteCard] = useState<EliteCard | null>(null);
 
 
 
@@ -91,18 +97,24 @@ const Sidebar = () => {
             {[
               { label: 'Dashboard', href: '/dashboard' },
               { label: 'Payments', href: '/payments' },
-            ].map((item) => (
-              <li key={item.label}>
-                <a
-                  href={item.href}
-                  className="block py-2.5 px-4 rounded-lg text-sm font-medium 
-                    hover:bg-blue-800/50 hover:text-blue-100 transition-all 
-                    duration-200 ease-in-out"
-                >
-                  {item.label}
-                </a>
-              </li>
-            ))}
+            ].map((item) => {
+              const isActive = location.pathname === item.href;
+              return (
+                <li key={item.label}>
+                  <a
+                    href={item.href}
+                    className={`block py-2.5 px-4 rounded-lg text-sm font-medium 
+                      transition-all duration-200 ease-in-out ${
+                        isActive
+                          ? 'bg-blue-700 text-white shadow-md'
+                          : 'hover:bg-blue-800/50 hover:text-blue-100 text-blue-100'
+                      }`}
+                  >
+                    {item.label}
+                  </a>
+                </li>
+              );
+            })}
           </ul>
         </div>
 

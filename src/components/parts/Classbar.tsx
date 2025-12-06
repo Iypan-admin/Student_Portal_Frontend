@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { getBatchDetails } from '../../services/api';
 import { BatchDetails } from '../../types/auth';
@@ -8,6 +8,7 @@ import { Menu, X, LogOut } from 'lucide-react';
 const Classbar = () => {
   const { batchId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { token } = useAuth();
   const [batchDetails, setBatchDetails] = useState<BatchDetails | null>(null);
   const [loading, setLoading] = useState(true);
@@ -71,18 +72,24 @@ const Classbar = () => {
               { label: 'Class Schedule', href: `/class/${batchId}` },
               { label: 'Resources', href: `/class/${batchId}/resources` },
               { label: 'Chat', href: `/class/${batchId}/chat` },
-            ].map((item) => (
-              <li key={item.label}>
-                <a
-                  href={item.href}
-                  className="block py-2.5 px-4 rounded-lg text-sm font-medium 
-                    hover:bg-blue-800/50 hover:text-blue-100 transition-all 
-                    duration-200 ease-in-out"
-                >
-                  {item.label}
-                </a>
-              </li>
-            ))}
+            ].map((item) => {
+              const isActive = location.pathname === item.href;
+              return (
+                <li key={item.label}>
+                  <a
+                    href={item.href}
+                    className={`block py-2.5 px-4 rounded-lg text-sm font-medium 
+                      transition-all duration-200 ease-in-out ${
+                        isActive
+                          ? 'bg-blue-700 text-white shadow-md'
+                          : 'hover:bg-blue-800/50 hover:text-blue-100 text-blue-100'
+                      }`}
+                  >
+                    {item.label}
+                  </a>
+                </li>
+              );
+            })}
           </ul>
         </div>
 

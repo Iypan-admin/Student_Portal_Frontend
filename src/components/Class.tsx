@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { LogOut, Calendar, Clock, CheckCircle, CalendarDays, CalendarClock, RefreshCw } from 'lucide-react';
+import { LogOut, Calendar, Clock, CheckCircle, CalendarDays, CalendarClock } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { getClassMeets } from '../services/api';
 import { ClassMeet } from '../types/auth';
@@ -13,6 +13,7 @@ const Class = () => {
   const [classMeets, setClassMeets] = useState<ClassMeet[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('current'); // 'current', 'previous', or 'upcoming'
+  const hasRefreshed = useRef(false);
 
   // Fetch Google Meet classes for the batch
   const fetchClassMeets = async () => {
@@ -31,6 +32,23 @@ const Class = () => {
 
   useEffect(() => {
     fetchClassMeets();
+  }, [batchId, token]);
+
+  // One-time refresh when component mounts or batchId changes
+  useEffect(() => {
+    // Reset refresh flag when batchId changes
+    hasRefreshed.current = false;
+  }, [batchId]);
+
+  useEffect(() => {
+    if (batchId && token && !hasRefreshed.current) {
+      hasRefreshed.current = true;
+      // Small delay to ensure initial data is loaded first, then refresh
+      const timer = setTimeout(() => {
+        fetchClassMeets();
+      }, 500);
+      return () => clearTimeout(timer);
+    }
   }, [batchId, token]);
 
   // Handle refresh button click

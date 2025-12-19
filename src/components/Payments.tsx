@@ -855,36 +855,6 @@ const Payments = () => {
                                     : "Pay"}
                                 </button>
                               </div>
-                              <div className="mt-2 bg-blue-50 border border-blue-200 rounded-md p-3 sm:p-4">
-                                <div className="flex">
-                                  <div className="flex-shrink-0">
-                                    <AlertCircle className="h-5 w-5 text-blue-600" />
-                                  </div>
-                                  <div className="ml-3">
-                                    <p className="text-xs sm:text-sm text-blue-700 space-y-1">
-                                      ⚠️ Important Payment Instructions:
-                                      <br />
-                                      1. After completing the payment, the page
-                                      will automatically redirect in ~5 seconds.
-                                      <br />
-                                      2.{" "}
-                                      <strong>
-                                        Do not refresh or close the page
-                                      </strong>{" "}
-                                      until the redirection occurs.
-                                      <br />
-                                      3. After redirection, you will see the
-                                      payment marked as{" "}
-                                      <strong>Verified</strong> on the top
-                                      right.
-                                      <br />
-                                      4. Please wait patiently until
-                                      verification completes; closing or
-                                      refreshing may cause payment issues.
-                                    </p>
-                                  </div>
-                                </div>
-                              </div>
                             </div>
                           )}
 
@@ -966,38 +936,6 @@ const Payments = () => {
                                   );
                                 }
                               )}
-
-                              {/* ⚠️ Payment Disclaimer at bottom */}
-                              <div className="mt-4 bg-blue-50 border border-blue-200 rounded-md p-3 sm:p-4">
-                                <div className="flex">
-                                  <div className="flex-shrink-0">
-                                    <AlertCircle className="h-5 w-5 text-blue-600" />
-                                  </div>
-                                  <div className="ml-3">
-                                    <p className="text-xs sm:text-sm text-blue-700 space-y-1">
-                                      ⚠️ Important Payment Instructions:
-                                      <br />
-                                      1. After completing the payment, the page
-                                      will automatically redirect in ~5 seconds.
-                                      <br />
-                                      2.{" "}
-                                      <strong>
-                                        Do not refresh or close the page
-                                      </strong>{" "}
-                                      until the redirection occurs.
-                                      <br />
-                                      3. After redirection, you will see the
-                                      payment marked as{" "}
-                                      <strong>Verified</strong> on the top
-                                      right.
-                                      <br />
-                                      4. Please wait patiently until
-                                      verification completes; closing or
-                                      refreshing may cause payment issues.
-                                    </p>
-                                  </div>
-                                </div>
-                              </div>
                             </div>
                           )}
                         </div>

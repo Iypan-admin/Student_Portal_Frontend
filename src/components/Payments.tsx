@@ -57,7 +57,7 @@ const Payments = () => {
   const [emiPaidCount, setEmiPaidCount] = useState(0);
   const [paidMonths, setPaidMonths] = useState<number[]>([]);
   const [isPaying, setIsPaying] = useState(false); // for disabling buttons during payment
-
+ const [showDemo, setShowDemo] = useState(false);
   const registrationNumber = studentDetails?.registration_number || "";
 
   // ✅ Payment Success Handler
@@ -596,20 +596,22 @@ const Payments = () => {
                 <nav className="-mb-px flex space-x-8" aria-label="Tabs">
                   <button
                     onClick={() => setActiveTab("current")}
-                    className={`${activeTab === "current"
-                      ? "border-blue-600 text-blue-600"
-                      : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                      } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center`}
+                    className={`${
+                      activeTab === "current"
+                        ? "border-blue-600 text-blue-600"
+                        : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                    } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center`}
                   >
                     <CreditCard className="h-5 w-5 mr-2" />
                     Make Payment
                   </button>
                   <button
                     onClick={() => setActiveTab("history")}
-                    className={`${activeTab === "history"
-                      ? "border-blue-600 text-blue-600"
-                      : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                      } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center`}
+                    className={`${
+                      activeTab === "history"
+                        ? "border-blue-600 text-blue-600"
+                        : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                    } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center`}
                   >
                     <Receipt className="h-5 w-5 mr-2" />
                     Transaction History
@@ -703,6 +705,96 @@ const Payments = () => {
                             )}
                           </div>
 
+                          {/* ⚠️ Payment Disclaimer with Demo Video */}
+                          <div className="mt-4 bg-blue-50 border border-blue-200 rounded-md p-4">
+                            <div className="flex">
+                              {/* Left Content */}
+                              <div className="flex">
+                                <div className="flex-shrink-0">
+                                  <AlertCircle className="h-5 w-5 text-red-600 mt-0.5" />
+                                </div>
+                                <div className="ml-3">
+                                  <p className="text-xs sm:text-sm text-blue-700 leading-relaxed">
+                                    <strong>
+                                      Important Payment Instructions:
+                                    </strong>
+                                    <br />
+                                    1. After completing the payment, this page
+                                    will automatically redirect within
+                                    approximately <strong>5 seconds</strong>.
+                                    <br />
+                                    2.{" "}
+                                    <strong>
+                                      Please do not refresh or close this page
+                                    </strong>{" "}
+                                    until the redirection is complete.
+                                    <br />
+                                    3. Once redirected, the payment status will
+                                    be displayed as <strong>Verified</strong> in
+                                    the top-right corner.
+                                    <br />
+                                    4. Kindly wait until the verification
+                                    process finishes. Refreshing or closing the
+                                    page may cause payment issues.
+                                    <br />
+                                    <br />
+                                    <span className="font-medium text-blue-800">
+                                      👉 Please watch the demo video before
+                                      proceeding with the payment.
+                                    </span>
+                                  </p>
+
+                                  {/* Demo Button - Bottom */}
+                                  <div className="mt-3 flex justify-center sm:justify-start">
+                                    <button
+                                      onClick={() => setShowDemo(true)}
+                                      className="w-full sm:w-auto px-4 py-2 
+                       text-xs sm:text-sm font-medium rounded-md 
+                       bg-red-600 text-white hover:bg-red-700 
+                       transition shadow"
+                                    >
+                                      ▶ View Demo Video
+                                    </button>
+                                  </div>
+                                  {showDemo && (
+                                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-3">
+                                      <div className="bg-white w-full max-w-lg rounded-xl shadow-xl relative">
+                                        {/* Close Button */}
+                                        <button
+                                          onClick={() => setShowDemo(false)}
+                                          className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
+                                        >
+                                          ✕
+                                        </button>
+
+                                        {/* Title */}
+                                        <div className="px-4 pt-4">
+                                          <h3 className="text-sm sm:text-base font-semibold text-gray-800">
+                                            Payment Process Demo
+                                          </h3>
+                                          <p className="text-xs sm:text-sm text-gray-600 mt-1">
+                                            Please watch this video carefully
+                                            before making the payment.
+                                          </p>
+                                        </div>
+
+                                        {/* Video */}
+                                        <div className="p-4">
+                                          <video
+                                            src="/videos/payment-demo.mp4"
+                                            controls
+                                            autoPlay
+                                            className="w-full rounded-md border"
+                                          />
+                                        </div>
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
                           {/* Full Fees Section */}
                           {paymentType === "full" && (
                             <div className="bg-gray-50 p-4 rounded-md shadow mb-4">
@@ -740,15 +832,27 @@ const Payments = () => {
                                 {/* Full Fees */}
                                 <button
                                   className={`px-4 py-2 text-sm rounded border text-white border-transparent transition duration-200 
-  ${statusApproved || isPaying || !isLocked ? "bg-green-400 cursor-not-allowed" : "bg-red-600 hover:bg-green-700"}`}
+  ${
+    statusApproved || isPaying || !isLocked
+      ? "bg-green-400 cursor-not-allowed"
+      : "bg-red-600 hover:bg-green-700"
+  }`}
                                   onClick={async () => {
                                     setIsPaying(true); // disable button immediately
                                     await handlePayment(finalFees);
                                     setIsPaying(false);
                                   }}
-                                  disabled={statusApproved || isPaying || !isLocked}
+                                  disabled={
+                                    statusApproved || isPaying || !isLocked
+                                  }
                                 >
-                                  {statusApproved ? "Paid" : isPaying ? "Processing..." : !isLocked ? "Please Confirm Selection" : "Pay"}
+                                  {statusApproved
+                                    ? "Paid"
+                                    : isPaying
+                                    ? "Processing..."
+                                    : !isLocked
+                                    ? "Please Confirm Selection"
+                                    : "Pay"}
                                 </button>
                               </div>
                               <div className="mt-2 bg-blue-50 border border-blue-200 rounded-md p-3 sm:p-4">
@@ -758,65 +862,110 @@ const Payments = () => {
                                   </div>
                                   <div className="ml-3">
                                     <p className="text-xs sm:text-sm text-blue-700 space-y-1">
-                                      ⚠️ Important Payment Instructions:<br />
-                                      1. After completing the payment, the page will automatically redirect in ~5 seconds.<br />
-                                      2. <strong>Do not refresh or close the page</strong> until the redirection occurs.<br />
-                                      3. After redirection, you will see the payment marked as <strong>Verified</strong> on the top right.<br />
-                                      4. Please wait patiently until verification completes; closing or refreshing may cause payment issues.
+                                      ⚠️ Important Payment Instructions:
+                                      <br />
+                                      1. After completing the payment, the page
+                                      will automatically redirect in ~5 seconds.
+                                      <br />
+                                      2.{" "}
+                                      <strong>
+                                        Do not refresh or close the page
+                                      </strong>{" "}
+                                      until the redirection occurs.
+                                      <br />
+                                      3. After redirection, you will see the
+                                      payment marked as{" "}
+                                      <strong>Verified</strong> on the top
+                                      right.
+                                      <br />
+                                      4. Please wait patiently until
+                                      verification completes; closing or
+                                      refreshing may cause payment issues.
                                     </p>
                                   </div>
                                 </div>
                               </div>
-
                             </div>
                           )}
 
                           {/* EMI Section */}
                           {paymentType === "emi" && (
                             <div className="bg-gray-50 p-4 rounded-md shadow mb-4 space-y-2">
-
                               {/* EMI Month Buttons */}
-                              {Array.from({ length: emiMonths }).map((_, idx) => {
-                                const month = idx + 1;
-                                const monthlyAmount = Math.round(finalFees / emiMonths);
-                                const isPaid = paidMonths.includes(month);
-                                const lastPaid = paidMonths.length > 0 ? Math.max(...paidMonths) : 0;
-                                // For EMI: Only enable first month initially, then sequential after payments
-                                const isNextPayMonth = paidMonths.length === 0 ? month === 1 : month === lastPaid + 1;
-                                // Disable if not locked, already paid, not next month, or currently paying
-                                const isDisabled = !isLocked || isPaid || !isNextPayMonth || isPaying;
+                              {Array.from({ length: emiMonths }).map(
+                                (_, idx) => {
+                                  const month = idx + 1;
+                                  const monthlyAmount = Math.round(
+                                    finalFees / emiMonths
+                                  );
+                                  const isPaid = paidMonths.includes(month);
+                                  const lastPaid =
+                                    paidMonths.length > 0
+                                      ? Math.max(...paidMonths)
+                                      : 0;
+                                  // For EMI: Only enable first month initially, then sequential after payments
+                                  const isNextPayMonth =
+                                    paidMonths.length === 0
+                                      ? month === 1
+                                      : month === lastPaid + 1;
+                                  // Disable if not locked, already paid, not next month, or currently paying
+                                  const isDisabled =
+                                    !isLocked ||
+                                    isPaid ||
+                                    !isNextPayMonth ||
+                                    isPaying;
 
-                                return (
-                                  <div
-                                    key={month}
-                                    className="flex items-center justify-between px-4 py-2 border rounded-md bg-white shadow-sm"
-                                  >
-                                    <div className="text-sm font-medium text-gray-800">
-                                      Month {month} - ₹{monthlyAmount}
-                                    </div>
-                                    <button
-                                      className={`px-4 py-1 text-sm font-medium rounded transition duration-200 
-                      ${isPaid
-                                          ? "bg-green-400 text-white cursor-not-allowed"
-                                          : !isLocked
-                                            ? "bg-gray-400 text-white cursor-not-allowed"
-                                            : isNextPayMonth
-                                              ? isPaying ? "bg-yellow-400 text-white cursor-not-allowed" : "bg-red-600 hover:bg-green-700 text-white"
-                                              : "bg-yellow-300 text-gray-800 cursor-not-allowed"}`}
-                                      onClick={async () => {
-                                        if (isNextPayMonth && !isPaid && isLocked) {
-                                          setIsPaying(true);
-                                          await handlePayment(monthlyAmount, month);
-                                          setIsPaying(false);
-                                        }
-                                      }}
-                                      disabled={isDisabled}
+                                  return (
+                                    <div
+                                      key={month}
+                                      className="flex items-center justify-between px-4 py-2 border rounded-md bg-white shadow-sm"
                                     >
-                                      {isPaid ? "Paid" : !isLocked ? "Please Confirm Selection" : isNextPayMonth ? (isPaying ? "Processing..." : "Pay Now") : "Upcoming"}
-                                    </button>
-                                  </div>
-                                );
-                              })}
+                                      <div className="text-sm font-medium text-gray-800">
+                                        Month {month} - ₹{monthlyAmount}
+                                      </div>
+                                      <button
+                                        className={`px-4 py-1 text-sm font-medium rounded transition duration-200 
+                      ${
+                        isPaid
+                          ? "bg-green-400 text-white cursor-not-allowed"
+                          : !isLocked
+                          ? "bg-gray-400 text-white cursor-not-allowed"
+                          : isNextPayMonth
+                          ? isPaying
+                            ? "bg-yellow-400 text-white cursor-not-allowed"
+                            : "bg-red-600 hover:bg-green-700 text-white"
+                          : "bg-yellow-300 text-gray-800 cursor-not-allowed"
+                      }`}
+                                        onClick={async () => {
+                                          if (
+                                            isNextPayMonth &&
+                                            !isPaid &&
+                                            isLocked
+                                          ) {
+                                            setIsPaying(true);
+                                            await handlePayment(
+                                              monthlyAmount,
+                                              month
+                                            );
+                                            setIsPaying(false);
+                                          }
+                                        }}
+                                        disabled={isDisabled}
+                                      >
+                                        {isPaid
+                                          ? "Paid"
+                                          : !isLocked
+                                          ? "Please Confirm Selection"
+                                          : isNextPayMonth
+                                          ? isPaying
+                                            ? "Processing..."
+                                            : "Pay Now"
+                                          : "Upcoming"}
+                                      </button>
+                                    </div>
+                                  );
+                                }
+                              )}
 
                               {/* ⚠️ Payment Disclaimer at bottom */}
                               <div className="mt-4 bg-blue-50 border border-blue-200 rounded-md p-3 sm:p-4">
@@ -826,22 +975,36 @@ const Payments = () => {
                                   </div>
                                   <div className="ml-3">
                                     <p className="text-xs sm:text-sm text-blue-700 space-y-1">
-                                      ⚠️ Important Payment Instructions:<br />
-                                      1. After completing the payment, the page will automatically redirect in ~5 seconds.<br />
-                                      2. <strong>Do not refresh or close the page</strong> until the redirection occurs.<br />
-                                      3. After redirection, you will see the payment marked as <strong>Verified</strong> on the top right.<br />
-                                      4. Please wait patiently until verification completes; closing or refreshing may cause payment issues.
+                                      ⚠️ Important Payment Instructions:
+                                      <br />
+                                      1. After completing the payment, the page
+                                      will automatically redirect in ~5 seconds.
+                                      <br />
+                                      2.{" "}
+                                      <strong>
+                                        Do not refresh or close the page
+                                      </strong>{" "}
+                                      until the redirection occurs.
+                                      <br />
+                                      3. After redirection, you will see the
+                                      payment marked as{" "}
+                                      <strong>Verified</strong> on the top
+                                      right.
+                                      <br />
+                                      4. Please wait patiently until
+                                      verification completes; closing or
+                                      refreshing may cause payment issues.
                                     </p>
                                   </div>
                                 </div>
                               </div>
-
                             </div>
                           )}
-
                         </div>
                       ) : (
-                        <p className="text-gray-500 mt-4">{error || "Loading course fee details..."}</p>
+                        <p className="text-gray-500 mt-4">
+                          {error || "Loading course fee details..."}
+                        </p>
                       )}
                     </div>
                   </div>
@@ -868,7 +1031,9 @@ const Payments = () => {
                         <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-blue-100">
                           <Receipt className="h-6 w-6 text-blue-600" />
                         </div>
-                        <p className="mt-2 text-sm font-medium text-gray-600">No transactions found</p>
+                        <p className="mt-2 text-sm font-medium text-gray-600">
+                          No transactions found
+                        </p>
                         <p className="mt-1 text-xs sm:text-sm text-gray-500">
                           Submit a payment to see it appear here
                         </p>
@@ -904,16 +1069,37 @@ const Payments = () => {
                             </thead>
                             <tbody className="bg-white divide-y divide-gray-200">
                               {transactions.map((txn) => (
-                                <tr key={txn.payment_id} className="hover:bg-gray-50">
-                                  <td className="px-4 py-2 text-sm text-gray-600">{formatDate(txn.created_at)}</td>
-                                  <td className="px-4 py-2 text-sm text-center text-gray-600">{txn.payment_id}</td>
-                                  <td className="px-4 py-2 text-sm text-gray-600">{txn.course_name}</td>
-                                  <td className="px-4 py-2 text-sm text-right text-gray-600">{txn.final_fees}</td>
-                                  <td className="px-4 py-2 text-sm text-center text-gray-600">{txn.payment_type}</td>
-                                  <td className="px-4 py-2 text-sm text-center text-gray-600">{txn.current_emi}</td>
+                                <tr
+                                  key={txn.payment_id}
+                                  className="hover:bg-gray-50"
+                                >
+                                  <td className="px-4 py-2 text-sm text-gray-600">
+                                    {formatDate(txn.created_at)}
+                                  </td>
+                                  <td className="px-4 py-2 text-sm text-center text-gray-600">
+                                    {txn.payment_id}
+                                  </td>
+                                  <td className="px-4 py-2 text-sm text-gray-600">
+                                    {txn.course_name}
+                                  </td>
+                                  <td className="px-4 py-2 text-sm text-right text-gray-600">
+                                    {txn.final_fees}
+                                  </td>
+                                  <td className="px-4 py-2 text-sm text-center text-gray-600">
+                                    {txn.payment_type}
+                                  </td>
+                                  <td className="px-4 py-2 text-sm text-center text-gray-600">
+                                    {txn.current_emi}
+                                  </td>
                                   <td className="px-4 py-2 text-center">
-                                    <span className={`px-3 py-1 text-xs font-medium rounded-full shadow-sm ${txn.status ? 'bg-blue-100 text-blue-800' : 'bg-yellow-100 text-yellow-800'}`}>
-                                      {txn.status ? 'Approved' : 'Pending'}
+                                    <span
+                                      className={`px-3 py-1 text-xs font-medium rounded-full shadow-sm ${
+                                        txn.status
+                                          ? "bg-blue-100 text-blue-800"
+                                          : "bg-yellow-100 text-yellow-800"
+                                      }`}
+                                    >
+                                      {txn.status ? "Approved" : "Pending"}
                                     </span>
                                   </td>
                                 </tr>
@@ -926,12 +1112,11 @@ const Payments = () => {
                   </div>
                 </div>
               )}
-
             </div>
           </div>
-        </main >
-      </div >
-    </div >
+        </main>
+      </div>
+    </div>
   );
 };
 

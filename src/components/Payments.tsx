@@ -758,7 +758,7 @@ const Payments = () => {
                                   </div>
                                   {showDemo && (
                                     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-3">
-                                      <div className="bg-white w-full max-w-lg rounded-xl shadow-xl relative">
+                                      <div className="bg-white w-full max-w-3xl rounded-xl shadow-xl relative">
                                         {/* Close Button */}
                                         <button
                                           onClick={() => setShowDemo(false)}
@@ -768,7 +768,7 @@ const Payments = () => {
                                         </button>
 
                                         {/* Title */}
-                                        <div className="px-4 pt-4">
+                                        <div className="px-5 pt-5">
                                           <h3 className="text-sm sm:text-base font-semibold text-gray-800">
                                             Payment Process Demo
                                           </h3>
@@ -781,7 +781,7 @@ const Payments = () => {
                                         {/* Video */}
                                         <div className="p-4">
                                           <video
-                                            src="/videos/payment-demo.mp4"
+                                            src="/videos/Demo Video.mp4"
                                             controls
                                             autoPlay
                                             className="w-full rounded-md border"

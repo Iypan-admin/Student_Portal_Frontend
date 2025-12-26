@@ -24,6 +24,24 @@ const API = axios.create({
   baseURL: API_URL,
   headers: { "Content-Type": "application/json" },
 });
+// 🔐 Global response interceptor – AUTO LOGOUT on token expiry
+API.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      console.warn("Session expired. Logging out...");
+
+      // Clear auth data
+      localStorage.clear();
+      sessionStorage.clear();
+
+      // Redirect to login
+      window.location.href = "/login";
+    }
+
+    return Promise.reject(error);
+  }
+);
 
 // ------------------------ AUTH ------------------------
 export const register = async (data: RegisterData): Promise<AuthResponse> => {
